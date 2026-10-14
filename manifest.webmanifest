@@ -1,6 +1,6 @@
 {
-  "name": "Bell's Palsy Face Progression Monitor",
-  "short_name": "Face Progress",
+  "name": "Facial Realignment Progress",
+  "short_name": "Realignment",
   "description": "Private, on-device facial symmetry check-ins for Bell's palsy recovery.",
   "start_url": "./",
   "scope": "./",
