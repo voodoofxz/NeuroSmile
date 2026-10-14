@@ -545,16 +545,16 @@ $('remind-btn').addEventListener('click', async () => {
   const now = new Date();
   const ymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
   const ics = [
-    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Facial Realignment Progress//EN', 'BEGIN:VEVENT',
-    `UID:facial-realignment-daily-${Date.now()}@local`,
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Smile Again//EN', 'BEGIN:VEVENT',
+    `UID:smile-again-daily-${Date.now()}@local`,
     `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`,
     `DTSTART:${ymd}T${hh}${mm}00`, 'DURATION:PT5M', 'RRULE:FREQ=DAILY',
-    'SUMMARY:Facial Realignment check-in 🌿',
+    'SUMMARY:Smile Again check-in 🌿',
     'DESCRIPTION:A quick 1-minute check-in. Breathe\\, be patient\\, this is temporary.',
-    'BEGIN:VALARM', 'TRIGGER:PT0M', 'ACTION:DISPLAY', 'DESCRIPTION:Time for your Facial Realignment check-in', 'END:VALARM',
+    'BEGIN:VALARM', 'TRIGGER:PT0M', 'ACTION:DISPLAY', 'DESCRIPTION:Time for your Smile Again check-in', 'END:VALARM',
     'END:VEVENT', 'END:VCALENDAR',
   ].join('\r\n');
-  download('facial-realignment-reminder.ics', new Blob([ics], { type: 'text/calendar' }));
+  download('smile-again-reminder.ics', new Blob([ics], { type: 'text/calendar' }));
   toast('Open the file to add it to your calendar');
 });
 
@@ -568,8 +568,8 @@ $('export-btn').addEventListener('click', async () => {
     for (const [k, b] of Object.entries(r.photos || {})) if (b) photos[k] = await blobToDataUrl(b);
     out.push({ ...r, date: new Date(r.date).toISOString(), photos });
   }
-  const payload = { app: 'bells-palsy-face-progression-monitor', exported: new Date().toISOString(), onset: await db.getSetting('onset'), checkIns: out };
-  download(`facial-realignment-backup-${new Date().toISOString().slice(0, 10)}.json`, new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+  const payload = { app: 'smile-again', exported: new Date().toISOString(), onset: await db.getSetting('onset'), checkIns: out };
+  download(`smile-again-backup-${new Date().toISOString().slice(0, 10)}.json`, new Blob([JSON.stringify(payload)], { type: 'application/json' }));
 });
 
 $('wipe-btn').addEventListener('click', async () => {

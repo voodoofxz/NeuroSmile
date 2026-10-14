@@ -1,6 +1,6 @@
-# Facial Realignment Progress
+# Smile Again
 
-*A gentle Bell's palsy recovery tracker.*
+*A gentle companion for Bell's palsy recovery.*
 
 A private, phone-friendly web app that tracks facial recovery from Bell's palsy.
 Each daily check-in uses the phone's front camera and on-device face tracking to
