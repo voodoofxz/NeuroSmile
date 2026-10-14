@@ -1,6 +1,6 @@
 // Caches the app shell and the face-analysis model so check-ins work offline.
 // Check-in photos are never cached or sent anywhere - they live in IndexedDB only.
-const CACHE = 'smile-again-v5';
+const CACHE = 'smile-again-v6';
 const SHELL = [
   './', 'index.html', 'css/styles.css', 'manifest.webmanifest', 'icons/icon.svg',
   'js/app.js', 'js/analysis.js', 'js/storage.js', 'js/messages.js', 'js/chart.js',

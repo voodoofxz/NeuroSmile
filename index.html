@@ -24,8 +24,55 @@
 <body>
   <main id="app">
 
+    <!-- WELCOME (first run) -->
+    <section id="view-welcome" class="view" data-view="welcome" hidden>
+      <ol class="steps welcome-steps" id="welcome-steps"><li></li><li></li><li></li></ol>
+
+      <div class="welcome-step" data-step="1">
+        <div class="welcome-hero" aria-hidden="true">🌿</div>
+        <h1>Welcome to Smile Again</h1>
+        <p class="lead">A gentle companion for your Bell’s palsy recovery.</p>
+        <div class="card prose">
+          <p>Each day you’ll take a quick 1-minute check-in. The app compares how the two sides of your face move and shows you every bit of progress — even the small steps.</p>
+          <p><strong>For most people, Bell’s palsy is temporary.</strong> Tracking it helps you see the healing as it happens.</p>
+          <p>🔒 Your photos never leave this phone. No account, no uploads.</p>
+        </div>
+        <button class="btn primary big" data-welcome-next>Let’s get started</button>
+      </div>
+
+      <div class="welcome-step" data-step="2" hidden>
+        <h1>When did it start?</h1>
+        <p class="lead">This lets us show which day of recovery you’re on. An estimate is fine.</p>
+        <div class="card">
+          <label class="label" for="welcome-onset">Date symptoms began</label>
+          <input type="date" id="welcome-onset" />
+          <p class="muted small-print">You can change this any time in Settings.</p>
+        </div>
+        <button class="btn primary big" id="welcome-onset-next" disabled>Continue</button>
+        <button class="btn" data-welcome-next>I’m not sure — skip for now</button>
+      </div>
+
+      <div class="welcome-step" data-step="3" hidden>
+        <h1>Your baseline photos</h1>
+        <p class="lead">Your first check-in becomes your starting point. Every future check-in is compared to it.</p>
+        <div class="card prose">
+          <p>You’ll be guided through four simple expressions:</p>
+          <ul>
+            <li>😐 A relaxed face</li>
+            <li>😁 A big smile</li>
+            <li>😮 Raised eyebrows</li>
+            <li>😌 Eyes gently closed</li>
+          </ul>
+          <p><strong>For the best baseline:</strong> face a window or soft light, hold the phone at eye level about an arm’s length away, and go easy — never strain.</p>
+          <p>However your face looks today is perfectly okay. This is simply where your journey begins.</p>
+        </div>
+        <button class="btn primary big" data-go="checkin">Take my baseline photos</button>
+        <button class="btn" data-go="home">I’ll do it later</button>
+      </div>
+    </section>
+
     <!-- HOME -->
-    <section id="view-home" class="view" data-view="home">
+    <section id="view-home" class="view" data-view="home" hidden>
       <header class="app-header">
         <h1>Smile Again</h1>
         <p class="sub" id="day-counter">Every check-in is a step forward</p>
@@ -45,7 +92,7 @@
         <p class="muted" id="last-meta"></p>
       </div>
 
-      <button class="btn primary big" data-go="checkin">Start today’s check-in</button>
+      <button class="btn primary big" data-go="checkin" id="start-btn">Start today’s check-in</button>
       <div class="btn-grid">
         <button class="btn" data-go="history">📈 Progress</button>
         <button class="btn" data-go="breathe">🫧 Breathe</button>

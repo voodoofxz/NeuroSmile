@@ -38,21 +38,28 @@ function toast(text, ms = 2600) {
 
 // ---------------------------------------------------------------- routing
 
-const VIEWS = ['home', 'checkin', 'result', 'history', 'detail', 'breathe', 'settings', 'about'];
+const VIEWS = ['welcome', 'home', 'checkin', 'result', 'history', 'detail', 'breathe', 'settings', 'about'];
 
 function go(view) {
-  location.hash = view === 'home' ? '' : view;
+  const hash = view === 'home' ? '' : `#${view}`;
+  // Same hash fires no hashchange (e.g. leaving the welcome screen for home), so route directly.
+  if (location.hash === hash) route();
+  else location.hash = hash;
 }
 
 async function route() {
   const [view = 'home', arg] = location.hash.replace(/^#/, '').split('/');
-  const name = VIEWS.includes(view) ? view : 'home';
+  let name = VIEWS.includes(view) ? view : 'home';
+  // First run: walk through setup before showing the home screen.
+  if (name === 'home' && !(await db.getSetting('onboarded')) && (await db.listCheckIns()).length === 0) {
+    name = 'welcome';
+  }
   if (name !== 'checkin') stopCamera();
   if (name !== 'breathe') stopBreathing();
   releaseUrls();
   for (const v of VIEWS) $(`view-${v}`).hidden = v !== name;
   window.scrollTo(0, 0);
-  const render = { home: renderHome, checkin: startCheckIn, result: renderResult, history: renderHistory,
+  const render = { welcome: renderWelcome, home: renderHome, checkin: startCheckIn, result: renderResult, history: renderHistory,
     detail: () => renderDetail(Number(arg)), breathe: renderBreathe, settings: renderSettings, about: renderAbout };
   await render[name]?.();
 }
@@ -62,6 +69,32 @@ document.addEventListener('click', (e) => {
   if (target) go(target.dataset.go);
 });
 window.addEventListener('hashchange', route);
+
+// ---------------------------------------------------------------- welcome
+
+function showWelcomeStep(n) {
+  document.querySelectorAll('.welcome-step').forEach((el) => (el.hidden = Number(el.dataset.step) !== n));
+  $('welcome-steps').querySelectorAll('li').forEach((li, i) => (li.className = i < n - 1 ? 'done' : i === n - 1 ? 'current' : ''));
+  window.scrollTo(0, 0);
+  // Reaching the baseline step means setup is done; "later" lands on home, not back here.
+  if (n === 3) db.setSetting('onboarded', true);
+}
+
+function renderWelcome() {
+  $('welcome-onset').max = new Date().toISOString().slice(0, 10);
+  showWelcomeStep(1);
+}
+
+$('view-welcome').addEventListener('click', (e) => {
+  if (!e.target.closest('[data-welcome-next]')) return;
+  const current = Number(document.querySelector('.welcome-step:not([hidden])').dataset.step);
+  showWelcomeStep(current + 1);
+});
+$('welcome-onset').addEventListener('input', (e) => ($('welcome-onset-next').disabled = !e.target.value));
+$('welcome-onset-next').addEventListener('click', async () => {
+  await db.setSetting('onset', $('welcome-onset').value);
+  showWelcomeStep(3);
+});
 
 // ---------------------------------------------------------------- home
 
@@ -80,6 +113,7 @@ async function renderHome() {
   }
 
   const last = list.at(-1);
+  $('start-btn').textContent = last ? 'Start today’s check-in' : 'Take your baseline photos';
   $('last-card').hidden = !last;
   if (!last) return;
   $('last-score').textContent = last.overall;
@@ -146,6 +180,7 @@ function stopCamera() {
 
 async function startCheckIn() {
   Object.assign(session, { poseIndex: 0, caps: {}, photos: {}, latest: null, busy: false });
+  session.isBaseline = (await db.listCheckIns()).length === 0;
   renderPoseStep();
   const loading = $('cam-loading');
   loading.hidden = false;
@@ -229,7 +264,8 @@ function updateHint(h) {
 
 function renderPoseStep() {
   const pose = POSES[session.poseIndex];
-  $('pose-title').textContent = `${session.poseIndex + 1} of ${POSES.length}: ${pose.title}`;
+  $('pose-title').innerHTML = (session.isBaseline ? '<span class="baseline-tag">Baseline</span><br>' : '')
+    + `${session.poseIndex + 1} of ${POSES.length}: ${pose.title}`;
   $('pose-instruction').textContent = pose.instruction;
   $('steps').innerHTML = POSES.map((_, i) =>
     `<li class="${i < session.poseIndex ? 'done' : i === session.poseIndex ? 'current' : ''}"></li>`).join('');

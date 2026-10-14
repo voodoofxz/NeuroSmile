@@ -271,3 +271,15 @@ figcaption { font-size: 0.85rem; color: var(--muted); text-align: center; margin
   padding: 10px 6px; border-radius: 9px; cursor: pointer; min-height: 44px;
 }
 .segmented button[aria-checked="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+
+/* First-run welcome */
+.welcome-step { display: flex; flex-direction: column; gap: 14px; }
+.welcome-step h1 { margin: 4px 0 0; font-size: 1.6rem; }
+.welcome-step .lead { margin: 0; color: var(--ink-2); font-size: 1.05rem; }
+.welcome-step .btn + .btn { margin-top: 0; }
+.welcome-hero { font-size: 3rem; line-height: 1; margin-top: 12px; }
+.welcome-steps { align-self: center; margin-top: 4px; }
+.prose ul { padding-left: 4px; list-style: none; }
+.prose li { margin: 4px 0; }
+.baseline-tag { display: inline-block; background: var(--accent-soft); color: var(--accent); font-size: 0.75rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 8px; border-radius: 999px; margin-bottom: 4px; }
