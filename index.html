@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#2f6f6a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Face Progress" />
+  <meta name="description" content="Track Bell's palsy recovery with private, on-device facial symmetry check-ins." />
+  <title>Bell's Palsy Face Progression Monitor</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <main id="app">
+
+    <!-- HOME -->
+    <section id="view-home" class="view" data-view="home">
+      <header class="app-header">
+        <h1>Face Progress</h1>
+        <p class="sub" id="day-counter">Bell’s palsy recovery check-ins</p>
+      </header>
+
+      <div class="card calm" id="calm-card">
+        <div class="calm-icon" aria-hidden="true">🌿</div>
+        <p id="calm-text"></p>
+      </div>
+
+      <div class="card" id="last-card" hidden>
+        <p class="label">Latest symmetry score</p>
+        <div class="score-row">
+          <span class="score-big" id="last-score">–</span>
+          <span class="delta" id="last-delta"></span>
+        </div>
+        <p class="muted" id="last-meta"></p>
+      </div>
+
+      <button class="btn primary big" data-go="checkin">Start today’s check-in</button>
+      <div class="btn-grid">
+        <button class="btn" data-go="history">📈 Progress</button>
+        <button class="btn" data-go="breathe">🫧 Breathe</button>
+        <button class="btn" data-go="settings">⚙️ Settings</button>
+        <button class="btn" data-go="about">🔒 Privacy</button>
+      </div>
+
+      <p class="disclaimer">This app is a personal tracking aid, not a medical device or diagnosis. Follow your doctor’s advice. Seek urgent care for sudden weakness in an arm or leg, trouble speaking, or a severe headache.</p>
+    </section>
+
+    <!-- CHECK-IN -->
+    <section id="view-checkin" class="view" data-view="checkin" hidden>
+      <div class="checkin-top">
+        <button class="link" id="cancel-checkin">✕ Cancel</button>
+        <ol class="steps" id="steps"></ol>
+      </div>
+      <div class="camera-wrap">
+        <video id="video" playsinline muted autoplay></video>
+        <canvas id="overlay"></canvas>
+        <div class="guide-oval" aria-hidden="true"></div>
+        <div class="countdown" id="countdown" hidden></div>
+        <div class="loading" id="cam-loading">Starting camera…</div>
+      </div>
+      <div class="pose-box">
+        <h2 id="pose-title"></h2>
+        <p id="pose-instruction"></p>
+        <p class="hint" id="hint" aria-live="polite"></p>
+        <button class="btn primary big" id="capture-btn" disabled>Capture</button>
+      </div>
+    </section>
+
+    <!-- RESULT -->
+    <section id="view-result" class="view" data-view="result" hidden>
+      <header class="app-header"><h1>Check-in complete</h1></header>
+      <div class="card encourage" id="encourage-card">
+        <h2 id="encourage-title"></h2>
+        <p id="encourage-body"></p>
+      </div>
+      <div class="card">
+        <p class="label">Overall symmetry</p>
+        <div class="score-row">
+          <span class="score-big" id="res-score"></span>
+          <span class="score-of">/ 100</span>
+        </div>
+        <div class="compare" id="res-compare"></div>
+      </div>
+      <div class="card">
+        <p class="label">By movement</p>
+        <div id="res-poses"></div>
+        <ul class="wins" id="res-wins"></ul>
+      </div>
+      <div class="card">
+        <label class="label" for="res-note">How are you feeling today? (optional)</label>
+        <textarea id="res-note" rows="3" placeholder="e.g. Felt a little twitch in my cheek this morning"></textarea>
+      </div>
+      <div class="card calm small"><p id="res-calm"></p></div>
+      <button class="btn primary big" id="res-done">Save &amp; finish</button>
+    </section>
+
+    <!-- HISTORY -->
+    <section id="view-history" class="view" data-view="history" hidden>
+      <header class="app-header with-back">
+        <button class="link" data-go="home">‹ Home</button>
+        <h1>Your progress</h1>
+      </header>
+      <div class="card" id="chart-card">
+        <p class="label">Overall symmetry over time</p>
+        <div id="chart"></div>
+        <p class="muted small-print">Tap a point to see that day. Higher is more symmetric.</p>
+      </div>
+      <div class="card" id="compare-card" hidden>
+        <p class="label">First check-in vs. latest (smile)</p>
+        <div class="compare-photos">
+          <figure><img id="cmp-first" alt="First check-in smile" /><figcaption id="cmp-first-cap"></figcaption></figure>
+          <figure><img id="cmp-last" alt="Latest check-in smile" /><figcaption id="cmp-last-cap"></figcaption></figure>
+        </div>
+      </div>
+      <div id="history-list"></div>
+      <p class="muted center" id="history-empty" hidden>No check-ins yet. Your first one becomes your baseline.</p>
+    </section>
+
+    <!-- DETAIL -->
+    <section id="view-detail" class="view" data-view="detail" hidden>
+      <header class="app-header with-back">
+        <button class="link" data-go="history">‹ Progress</button>
+        <h1 id="detail-title"></h1>
+      </header>
+      <div class="card">
+        <div class="score-row">
+          <span class="score-big" id="detail-score"></span>
+          <span class="score-of">/ 100</span>
+        </div>
+        <div class="compare" id="detail-compare"></div>
+      </div>
+      <div class="photo-grid" id="detail-photos"></div>
+      <div class="card"><div id="detail-poses"></div></div>
+      <div class="card" id="detail-note-card" hidden><p class="label">Your note</p><p id="detail-note"></p></div>
+      <button class="btn danger" id="detail-delete">Delete this check-in</button>
+    </section>
+
+    <!-- BREATHE -->
+    <section id="view-breathe" class="view" data-view="breathe" hidden>
+      <header class="app-header with-back">
+        <button class="link" data-go="home">‹ Home</button>
+        <h1>Take a calm minute</h1>
+      </header>
+      <div class="breathe-stage">
+        <div class="breathe-circle" id="breathe-circle"><span id="breathe-text">Tap to begin</span></div>
+      </div>
+      <p class="center muted">Breathe in for 4, hold for 2, out for 6. Let your jaw and cheeks soften.</p>
+      <div class="card calm small"><p id="breathe-calm"></p></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="view-settings" class="view" data-view="settings" hidden>
+      <header class="app-header with-back">
+        <button class="link" data-go="home">‹ Home</button>
+        <h1>Settings</h1>
+      </header>
+      <div class="card">
+        <label class="label" for="onset">When did your symptoms start?</label>
+        <input type="date" id="onset" />
+        <p class="muted small-print">Used to show “Day N of recovery”. Stays on this phone.</p>
+      </div>
+      <div class="card">
+        <p class="label">Daily reminder</p>
+        <label class="label" for="remind-time">Time</label>
+        <input type="time" id="remind-time" value="09:00" />
+        <button class="btn" id="remind-btn">Add daily reminder to my calendar</button>
+        <p class="muted small-print">Creates a repeating calendar event on your phone. Same time each day keeps lighting consistent.</p>
+      </div>
+      <div class="card">
+        <p class="label">Your data</p>
+        <button class="btn" id="export-btn">Export a backup file</button>
+        <button class="btn danger" id="wipe-btn">Delete all check-ins &amp; photos</button>
+      </div>
+    </section>
+
+    <!-- ABOUT / PRIVACY -->
+    <section id="view-about" class="view" data-view="about" hidden>
+      <header class="app-header with-back">
+        <button class="link" data-go="home">‹ Home</button>
+        <h1>Privacy &amp; how it works</h1>
+      </header>
+      <div class="card prose">
+        <h3>Your photos never leave your phone</h3>
+        <p>Face analysis runs entirely on this device. Photos and scores are saved in this app’s private storage on your phone only. Nothing is uploaded, and there is no account.</p>
+        <p>The only download is the face-analysis model itself, fetched once and then cached so the app works offline.</p>
+        <h3>How the score works</h3>
+        <p>Each check-in asks for four expressions. For each one, the app finds 478 points on your face and compares how far your left and right side move. If your weaker side moves 70% as much as your stronger side, that movement scores about 70.</p>
+        <p>The overall score blends: relaxed face 20%, smile 35%, eyebrow raise 20%, eye closing 25%. 100 means both sides look and move the same.</p>
+        <h3>Tips for steady numbers</h3>
+        <ul>
+          <li>Check in at the same time and place each day.</li>
+          <li>Face a window or soft light — avoid strong light from one side.</li>
+          <li>Hold the phone at eye level, arm’s length away.</li>
+          <li>Expect a few points of day-to-day wobble. Watch the trend.</li>
+        </ul>
+        <h3>Look after your eye</h3>
+        <p id="eye-tip"></p>
+        <h3>Not medical advice</h3>
+        <p>This is a personal tracking aid, not a diagnostic tool. Share your progress with your doctor, and contact them if things get worse or you notice new symptoms.</p>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" hidden></div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
