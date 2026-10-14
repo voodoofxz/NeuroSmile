@@ -539,7 +539,7 @@ function applyTheme(choice) {
   else delete root.dataset.theme;
   // Keep the phone's status bar color in step with the page.
   const dark = choice === 'dark' || (choice === 'auto' && darkQuery.matches);
-  document.querySelector('meta[name="theme-color"]').content = dark ? '#0f1716' : '#2f6f6a';
+  document.querySelector('meta[name="theme-color"]').content = dark ? '#1a2433' : '#e9f0f5';
   document.querySelectorAll('[data-theme-choice]').forEach((b) =>
     b.setAttribute('aria-checked', String(b.dataset.themeChoice === choice)));
 }

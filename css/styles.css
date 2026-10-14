@@ -1,65 +1,74 @@
 :root {
-  --bg: #f4f7f5;
-  --surface: #ffffff;
-  --ink: #1d2b2a;
-  --ink-2: #4c5f5d;
-  --muted: #7a8b89;
-  --line: #dde6e3;
-  --accent: #2f6f6a;
+  --bg: #f5f3ee;
+  --bg-grad: linear-gradient(180deg, #e9f0f5 0%, #f2f1ef 45%, #f6f1ea 100%);
+  --surface: #fffdfa;
+  --ink: #2c3540;
+  --ink-2: #56616d;
+  --muted: #6c7682;
+  --line: #e7e2d9;
+  --accent: #47798f;
   --accent-ink: #ffffff;
-  --accent-soft: #e3f0ee;
-  --calm: #eef4ea;
-  --calm-ink: #3d5a36;
-  --good: #2e7d4f;
-  --good-soft: #e3f3e8;
-  --warn: #a8641b;
-  --danger: #b33a3a;
-  --bar-track: #e7eeec;
-  --radius: 16px;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 4px 16px rgb(0 0 0 / 0.04);
+  --accent-soft: #e3edf2;
+  --lavender: #ece8f4;
+  --lavender-ink: #5d5480;
+  --calm: #ebf1e8;
+  --calm-ink: #4b6346;
+  --good: #367152;
+  --good-soft: #e5f0e8;
+  --warn: #96602a;
+  --danger: #ad4b4b;
+  --bar-track: #ebe7e0;
+  --radius: 20px;
+  --shadow: 0 1px 2px rgb(60 70 90 / 0.04), 0 6px 20px rgb(60 70 90 / 0.05);
   color-scheme: light dark;
 }
 
 /* Theme: "auto" follows the phone; Settings can force light or dark via data-theme. */
 :root[data-theme="light"] { color-scheme: light; }
 :root[data-theme="dark"] {
-  --bg: #0f1716;
-  --surface: #182322;
-  --ink: #e7efed;
-  --ink-2: #b4c4c1;
-  --muted: #82948f;
-  --line: #2a3836;
-  --accent: #5fb3a9;
-  --accent-ink: #0c1615;
-  --accent-soft: #1d3331;
-  --calm: #1b2a1b;
-  --calm-ink: #b7d3a9;
-  --good: #6fcf97;
-  --good-soft: #17301f;
-  --warn: #e0a35f;
-  --danger: #ef7d7d;
-  --bar-track: #26332f;
+  --bg: #151c26;
+  --bg-grad: linear-gradient(180deg, #1a2433 0%, #161d28 50%, #141a22 100%);
+  --surface: #1e2734;
+  --ink: #e5eaf0;
+  --ink-2: #b3bdc9;
+  --muted: #8390a0;
+  --line: #2c3746;
+  --accent: #8dbad0;
+  --accent-ink: #10202b;
+  --accent-soft: #223345;
+  --lavender: #29273d;
+  --lavender-ink: #c9c0ea;
+  --calm: #1f2b28;
+  --calm-ink: #bad3c0;
+  --good: #8ed0a9;
+  --good-soft: #1c2f27;
+  --warn: #e2b07c;
+  --danger: #ec9090;
+  --bar-track: #2a3543;
   --shadow: none;
   color-scheme: dark;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0f1716;
-    --surface: #182322;
-    --ink: #e7efed;
-    --ink-2: #b4c4c1;
-    --muted: #82948f;
-    --line: #2a3836;
-    --accent: #5fb3a9;
-    --accent-ink: #0c1615;
-    --accent-soft: #1d3331;
-    --calm: #1b2a1b;
-    --calm-ink: #b7d3a9;
-    --good: #6fcf97;
-    --good-soft: #17301f;
-    --warn: #e0a35f;
-    --danger: #ef7d7d;
-    --bar-track: #26332f;
+    --bg: #151c26;
+    --bg-grad: linear-gradient(180deg, #1a2433 0%, #161d28 50%, #141a22 100%);
+    --surface: #1e2734;
+    --ink: #e5eaf0;
+    --ink-2: #b3bdc9;
+    --muted: #8390a0;
+    --line: #2c3746;
+    --accent: #8dbad0;
+    --accent-ink: #10202b;
+    --accent-soft: #223345;
+    --lavender: #29273d;
+    --lavender-ink: #c9c0ea;
+    --calm: #1f2b28;
+    --calm-ink: #bad3c0;
+    --good: #8ed0a9;
+    --good-soft: #1c2f27;
+    --warn: #e2b07c;
+    --danger: #ec9090;
+    --bar-track: #2a3543;
     --shadow: none;
     color-scheme: dark;
   }
@@ -70,10 +79,13 @@
 html, body {
   margin: 0;
   background: var(--bg);
+  min-height: 100%;
   color: var(--ink);
   font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
   -webkit-text-size-adjust: 100%;
 }
+html { background: var(--bg-grad), var(--bg); background-attachment: scroll; }
+body { background: transparent; }
 
 #app {
   max-width: 560px;
@@ -103,8 +115,10 @@ html, body {
 .card.encourage { background: var(--good-soft); border-color: transparent; }
 .card.encourage h2 { margin: 0 0 6px; font-size: 1.25rem; color: var(--good); }
 .card.encourage p { margin: 0; }
-.card.encourage.tone-gentle h2, .card.encourage.tone-start h2 { color: var(--accent); }
-.card.encourage.tone-gentle, .card.encourage.tone-start { background: var(--accent-soft); }
+.card.encourage.tone-start h2 { color: var(--accent); }
+.card.encourage.tone-start { background: var(--accent-soft); }
+.card.encourage.tone-gentle h2, .card.encourage.tone-steady h2 { color: var(--lavender-ink); }
+.card.encourage.tone-gentle, .card.encourage.tone-steady { background: var(--lavender); }
 
 .label { margin: 0 0 6px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; display: block; }
 .muted { color: var(--muted); }
@@ -245,8 +259,9 @@ figcaption { font-size: 0.85rem; color: var(--muted); text-align: center; margin
 .breathe-stage { display: grid; place-items: center; padding: 30px 0; }
 .breathe-circle {
   width: 180px; height: 180px; border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, var(--accent-soft), var(--accent));
-  display: grid; place-items: center; color: var(--accent-ink); font-weight: 600; font-size: 1.1rem;
+  background: radial-gradient(circle at 50% 45%, var(--accent-soft) 0%, var(--lavender) 75%);
+  box-shadow: 0 0 0 12px color-mix(in srgb, var(--accent) 12%, transparent), 0 0 60px color-mix(in srgb, var(--lavender-ink) 25%, transparent);
+  display: grid; place-items: center; color: var(--lavender-ink); font-weight: 600; font-size: 1.1rem;
   transform: scale(0.7); cursor: pointer; user-select: none;
   transition: transform 4s ease-in-out;
 }
