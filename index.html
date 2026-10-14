@@ -13,6 +13,13 @@
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
   <link rel="stylesheet" href="css/styles.css" />
+  <script>
+    // Apply the saved theme before first paint so there is no flash.
+    try {
+      const t = localStorage.getItem('theme');
+      if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+    } catch {}
+  </script>
 </head>
 <body>
   <main id="app">
@@ -158,6 +165,15 @@
         <button class="link" data-go="home">‹ Home</button>
         <h1>Settings</h1>
       </header>
+      <div class="card">
+        <p class="label" id="theme-label">Appearance</p>
+        <div class="segmented" role="radiogroup" aria-labelledby="theme-label" id="theme-picker">
+          <button role="radio" data-theme-choice="auto">Auto</button>
+          <button role="radio" data-theme-choice="light">☀️ Light</button>
+          <button role="radio" data-theme-choice="dark">🌙 Dark</button>
+        </div>
+        <p class="muted small-print">Auto matches your phone’s light/dark setting.</p>
+      </div>
       <div class="card">
         <label class="label" for="onset">When did your symptoms start?</label>
         <input type="date" id="onset" />

@@ -20,8 +20,30 @@
   color-scheme: light dark;
 }
 
+/* Theme: "auto" follows the phone; Settings can force light or dark via data-theme. */
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] {
+  --bg: #0f1716;
+  --surface: #182322;
+  --ink: #e7efed;
+  --ink-2: #b4c4c1;
+  --muted: #82948f;
+  --line: #2a3836;
+  --accent: #5fb3a9;
+  --accent-ink: #0c1615;
+  --accent-soft: #1d3331;
+  --calm: #1b2a1b;
+  --calm-ink: #b7d3a9;
+  --good: #6fcf97;
+  --good-soft: #17301f;
+  --warn: #e0a35f;
+  --danger: #ef7d7d;
+  --bar-track: #26332f;
+  --shadow: none;
+  color-scheme: dark;
+}
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #0f1716;
     --surface: #182322;
     --ink: #e7efed;
@@ -39,6 +61,7 @@
     --danger: #ef7d7d;
     --bar-track: #26332f;
     --shadow: none;
+    color-scheme: dark;
   }
 }
 
@@ -241,3 +264,10 @@ figcaption { font-size: 0.85rem; color: var(--muted); text-align: center; margin
 @media (prefers-reduced-motion: reduce) {
   .breathe-circle { transition-duration: 0.01s; }
 }
+
+.segmented { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; background: var(--bar-track); padding: 4px; border-radius: 12px; }
+.segmented button {
+  appearance: none; border: 0; background: transparent; color: var(--ink-2); font: inherit; font-weight: 600;
+  padding: 10px 6px; border-radius: 9px; cursor: pointer; min-height: 44px;
+}
+.segmented button[aria-checked="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }

@@ -487,6 +487,33 @@ $('breathe-circle').addEventListener('click', () => {
   step();
 });
 
+// ---------------------------------------------------------------- theme
+
+const darkQuery = matchMedia('(prefers-color-scheme: dark)');
+
+function getTheme() {
+  try { return localStorage.getItem('theme') || 'auto'; } catch { return 'auto'; }
+}
+
+function applyTheme(choice) {
+  const root = document.documentElement;
+  if (choice === 'light' || choice === 'dark') root.dataset.theme = choice;
+  else delete root.dataset.theme;
+  // Keep the phone's status bar color in step with the page.
+  const dark = choice === 'dark' || (choice === 'auto' && darkQuery.matches);
+  document.querySelector('meta[name="theme-color"]').content = dark ? '#0f1716' : '#2f6f6a';
+  document.querySelectorAll('[data-theme-choice]').forEach((b) =>
+    b.setAttribute('aria-checked', String(b.dataset.themeChoice === choice)));
+}
+
+$('theme-picker').addEventListener('click', (e) => {
+  const choice = e.target.closest('[data-theme-choice]')?.dataset.themeChoice;
+  if (!choice) return;
+  try { localStorage.setItem('theme', choice); } catch { /* still applies for this visit */ }
+  applyTheme(choice);
+});
+darkQuery.addEventListener('change', () => applyTheme(getTheme()));
+
 // ---------------------------------------------------------------- settings
 
 async function renderSettings() {
@@ -556,6 +583,7 @@ function renderAbout() {
 
 // ---------------------------------------------------------------- boot
 
+applyTheme(getTheme());
 db.requestPersistence();
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   navigator.serviceWorker.register('sw.js').catch(() => {});
