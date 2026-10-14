@@ -1,6 +1,6 @@
 import { POSES, normalize, frameFeatures, averageFrames, scoreCheckIn, framingHint } from './analysis.js';
 import * as db from './storage.js';
-import { calmReminder, encouragement, poseImprovementNote, EYE_CARE_TIP } from './messages.js';
+import { calmReminder, encouragement, poseImprovementNote, sleepNote, EYE_CARE_TIP } from './messages.js';
 import { renderChart } from './chart.js';
 
 const MP_VERSION = '0.10.14';
@@ -14,6 +14,7 @@ const $ = (id) => document.getElementById(id);
 const sideName = (s) => (s === 'left' ? 'your left' : 'your right');
 const fmtDate = (t) => new Date(t).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 const fmtTime = (t) => new Date(t).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+const fmtSleep = (m) => `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`;
 const signed = (n) => (n > 0 ? `+${n}` : `${n}`);
 
 let objectUrls = [];
@@ -50,9 +51,13 @@ function go(view) {
 async function route() {
   const [view = 'home', arg] = location.hash.replace(/^#/, '').split('/');
   let name = VIEWS.includes(view) ? view : 'home';
-  // First run: walk through setup before showing the home screen.
-  if (name === 'home' && !(await db.getSetting('onboarded')) && (await db.listCheckIns()).length === 0) {
-    name = 'welcome';
+  // Setup is required: a start date and a baseline check-in before anything else.
+  const setup = await setupState();
+  if (!setup.done) {
+    const allowed = setup.onset ? ['welcome', 'checkin', 'result', 'about'] : ['welcome', 'about'];
+    if (!allowed.includes(name)) name = 'welcome';
+  } else if (name === 'welcome') {
+    name = 'home';
   }
   if (name !== 'checkin') stopCamera();
   if (name !== 'breathe') stopBreathing();
@@ -72,28 +77,39 @@ window.addEventListener('hashchange', route);
 
 // ---------------------------------------------------------------- welcome
 
+async function setupState() {
+  const [onset, list] = await Promise.all([db.getSetting('onset'), db.listCheckIns()]);
+  const hasBaseline = list.length > 0;
+  return { onset, hasBaseline, done: Boolean(onset) && hasBaseline };
+}
+
 function showWelcomeStep(n) {
   document.querySelectorAll('.welcome-step').forEach((el) => (el.hidden = Number(el.dataset.step) !== n));
   $('welcome-steps').querySelectorAll('li').forEach((li, i) => (li.className = i < n - 1 ? 'done' : i === n - 1 ? 'current' : ''));
   window.scrollTo(0, 0);
-  // Reaching the baseline step means setup is done; "later" lands on home, not back here.
-  if (n === 3) db.setSetting('onboarded', true);
 }
 
-function renderWelcome() {
-  $('welcome-onset').max = new Date().toISOString().slice(0, 10);
-  showWelcomeStep(1);
+async function renderWelcome() {
+  const { onset, hasBaseline } = await setupState();
+  const input = $('welcome-onset');
+  input.max = new Date().toISOString().slice(0, 10);
+  input.value = onset || '';
+  $('welcome-onset-next').disabled = !input.value;
+  // Resume where setup left off (e.g. after cancelling the baseline check-in).
+  showWelcomeStep(onset ? 3 : hasBaseline ? 2 : 1);
 }
 
 $('view-welcome').addEventListener('click', (e) => {
-  if (!e.target.closest('[data-welcome-next]')) return;
   const current = Number(document.querySelector('.welcome-step:not([hidden])').dataset.step);
-  showWelcomeStep(current + 1);
+  if (e.target.closest('[data-welcome-next]')) showWelcomeStep(current + 1);
+  if (e.target.closest('[data-welcome-back]')) showWelcomeStep(current - 1);
 });
 $('welcome-onset').addEventListener('input', (e) => ($('welcome-onset-next').disabled = !e.target.value));
 $('welcome-onset-next').addEventListener('click', async () => {
   await db.setSetting('onset', $('welcome-onset').value);
-  showWelcomeStep(3);
+  // Someone with check-ins from before setup was required only needs the date.
+  if ((await setupState()).done) go('home');
+  else showWelcomeStep(3);
 });
 
 // ---------------------------------------------------------------- home
@@ -170,6 +186,7 @@ const session = {
 };
 
 function stopCamera() {
+  session.active = false;
   cancelAnimationFrame(session.raf);
   session.raf = 0;
   session.stream?.getTracks().forEach((t) => t.stop());
@@ -178,9 +195,31 @@ function stopCamera() {
   session.busy = false;
 }
 
+// Every check-in starts by asking about last night's sleep, then opens the camera.
 async function startCheckIn() {
-  Object.assign(session, { poseIndex: 0, caps: {}, photos: {}, latest: null, busy: false });
-  session.isBaseline = (await db.listCheckIns()).length === 0;
+  const list = await db.listCheckIns();
+  Object.assign(session, { poseIndex: 0, caps: {}, photos: {}, latest: null, busy: false, active: true, sleepMinutes: null });
+  session.isBaseline = list.length === 0;
+  const lastSleep = [...list].reverse().find((r) => r.sleepMinutes != null)?.sleepMinutes ?? 7 * 60;
+  const opts = (values, fmt) => values.map((v) => `<option value="${v}">${fmt(v)}</option>`).join('');
+  $('sleep-hours').innerHTML = opts([...Array(15).keys()], String);
+  $('sleep-mins').innerHTML = opts([...Array(12).keys()].map((i) => i * 5), (m) => String(m).padStart(2, '0'));
+  $('sleep-hours').value = Math.min(14, Math.floor(lastSleep / 60));
+  $('sleep-mins').value = Math.round((lastSleep % 60) / 5) * 5 % 60;
+  $('sleep-step').hidden = false;
+  $('camera-step').hidden = true;
+  $('steps').innerHTML = '';
+}
+
+$('sleep-next').addEventListener('click', () => {
+  session.sleepMinutes = Number($('sleep-hours').value) * 60 + Number($('sleep-mins').value);
+  $('sleep-step').hidden = true;
+  $('camera-step').hidden = false;
+  window.scrollTo(0, 0);
+  startCamera();
+});
+
+async function startCamera() {
   renderPoseStep();
   const loading = $('cam-loading');
   loading.hidden = false;
@@ -196,6 +235,7 @@ async function startCheckIn() {
     loading.textContent = 'Camera access is needed for check-ins. Please allow the camera in your browser settings and try again.';
     return;
   }
+  if (!session.active) return stopCamera(); // left the screen while the camera was starting
   const video = $('video');
   video.srcObject = session.stream;
   await video.play().catch(() => {});
@@ -357,7 +397,7 @@ async function finishCheckIn() {
   stopCamera();
   const previous = await db.listCheckIns();
   const score = scoreCheckIn(session.caps);
-  const record = { date: Date.now(), ...score, photos: session.photos, note: '' };
+  const record = { date: Date.now(), ...score, sleepMinutes: session.sleepMinutes, photos: session.photos, note: '' };
   record.id = await db.addCheckIn(record);
   lastResult = { record, previous };
   go('result');
@@ -417,6 +457,9 @@ function renderResult() {
     ? POSES.map((p) => poseImprovementNote(p.title, rec.poses[p.key].score, base.poses[p.key].score))
       .filter(Boolean).map((t) => `<li>${t}</li>`).join('')
     : '';
+  const sleep = sleepNote(rec.sleepMinutes);
+  $('res-sleep').hidden = !sleep;
+  $('res-sleep').innerHTML = sleep ? `<div class="calm-icon" aria-hidden="true">😴</div><p><strong>${fmtSleep(rec.sleepMinutes)} of sleep.</strong> ${sleep}</p>` : '';
   $('res-note').value = '';
   $('res-calm').textContent = calmReminder();
 }
@@ -455,7 +498,8 @@ async function renderHistory() {
     return `<button class="history-item" data-go="detail/${r.id}">
       <img src="${blobUrl(r.photos?.smile)}" alt="" />
       <div class="meta"><div class="date">${fmtDate(r.date)}</div>
-        <div class="note">${r.note ? escapeHtml(r.note) : fmtTime(r.date)}</div></div>
+        <div class="note">${r.note ? escapeHtml(r.note) : fmtTime(r.date)}</div>
+        ${r.sleepMinutes != null ? `<div class="sleep">😴 ${fmtSleep(r.sleepMinutes)} sleep</div>` : ''}</div>
       <div class="score">${r.overall}${d == null ? '<small class="muted">baseline</small>'
         : `<small class="delta ${d > 0 ? 'up' : 'down'}">${signed(d)}</small>`}</div>
     </button>`;
@@ -477,6 +521,8 @@ async function renderDetail(id) {
   $('detail-photos').innerHTML = POSES.map((p) =>
     `<figure><img src="${blobUrl(rec.photos?.[p.key])}" alt="${p.title}" /><figcaption>${p.title} · ${rec.poses[p.key].score}</figcaption></figure>`).join('');
   $('detail-poses').innerHTML = poseRows(rec);
+  $('detail-sleep-card').hidden = rec.sleepMinutes == null;
+  $('detail-sleep').textContent = rec.sleepMinutes != null ? `😴 ${fmtSleep(rec.sleepMinutes)}` : '';
   $('detail-note-card').hidden = !rec.note;
   $('detail-note').textContent = rec.note || '';
 }
@@ -560,7 +606,12 @@ async function renderSettings() {
 }
 
 $('onset').addEventListener('change', async (e) => {
-  await db.setSetting('onset', e.target.value || null);
+  // The start date is required, so clearing it just restores the saved one.
+  if (!e.target.value) {
+    e.target.value = (await db.getSetting('onset')) || '';
+    return;
+  }
+  await db.setSetting('onset', e.target.value);
   toast('Saved');
 });
 

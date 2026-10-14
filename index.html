@@ -37,24 +37,29 @@
           <p><strong>For most people, Bell’s palsy is temporary.</strong> Tracking it helps you see the healing as it happens.</p>
           <p>🔒 Your photos never leave this phone. No account, no uploads.</p>
         </div>
-        <button class="btn primary big" data-welcome-next>Let’s get started</button>
+        <div class="card why">
+          <p class="label">Why a quick setup first?</p>
+          <p>Accurate tracking needs a starting point. Your <strong>start date</strong> and <strong>baseline photos</strong> give every future check-in something to compare against — that’s how Smile Again can spot even the smallest improvement and show you how far you’ve come.</p>
+          <p class="muted small-print">Takes about 2 minutes · 3 steps</p>
+        </div>
+        <button class="btn primary big" data-welcome-next>Let’s set up</button>
       </div>
 
       <div class="welcome-step" data-step="2" hidden>
         <h1>When did it start?</h1>
-        <p class="lead">This lets us show which day of recovery you’re on. An estimate is fine.</p>
+        <p class="lead">Knowing your start date lets us track your progress against a typical recovery timeline and show which day you’re on. A best guess is perfectly fine.</p>
         <div class="card">
           <label class="label" for="welcome-onset">Date symptoms began</label>
           <input type="date" id="welcome-onset" />
           <p class="muted small-print">You can change this any time in Settings.</p>
         </div>
         <button class="btn primary big" id="welcome-onset-next" disabled>Continue</button>
-        <button class="btn" data-welcome-next>I’m not sure — skip for now</button>
+        <p class="muted small-print center">Not sure of the exact day? Pick the closest date you remember.</p>
       </div>
 
       <div class="welcome-step" data-step="3" hidden>
         <h1>Your baseline photos</h1>
-        <p class="lead">Your first check-in becomes your starting point. Every future check-in is compared to it.</p>
+        <p class="lead">This is the last setup step. Your baseline is the starting point every future check-in is measured against, so the more natural it is, the more accurate your progress will be.</p>
         <div class="card prose">
           <p>You’ll be guided through four simple expressions:</p>
           <ul>
@@ -67,7 +72,7 @@
           <p>However your face looks today is perfectly okay. This is simply where your journey begins.</p>
         </div>
         <button class="btn primary big" data-go="checkin">Take my baseline photos</button>
-        <button class="btn" data-go="home">I’ll do it later</button>
+        <button class="link" data-welcome-back>‹ Change start date</button>
       </div>
     </section>
 
@@ -109,6 +114,20 @@
         <button class="link" id="cancel-checkin">✕ Cancel</button>
         <ol class="steps" id="steps"></ol>
       </div>
+      <div class="sleep-step" id="sleep-step">
+        <div class="welcome-hero" aria-hidden="true">😴</div>
+        <h1>How did you sleep?</h1>
+        <p class="lead">How much sleep did you get last night? Rest plays a big part in healing, and tiredness can affect how your face moves.</p>
+        <div class="card">
+          <p class="label" id="sleep-label">Hours of sleep</p>
+          <div class="sleep-inputs" role="group" aria-labelledby="sleep-label">
+            <label><select id="sleep-hours"></select><span>hours</span></label>
+            <label><select id="sleep-mins"></select><span>minutes</span></label>
+          </div>
+        </div>
+        <button class="btn primary big" id="sleep-next">Continue to check-in</button>
+      </div>
+      <div class="camera-step" id="camera-step" hidden>
       <div class="camera-wrap">
         <video id="video" playsinline muted autoplay></video>
         <canvas id="overlay"></canvas>
@@ -121,6 +140,7 @@
         <p id="pose-instruction"></p>
         <p class="hint" id="hint" aria-live="polite"></p>
         <button class="btn primary big" id="capture-btn" disabled>Capture</button>
+      </div>
       </div>
     </section>
 
@@ -144,6 +164,7 @@
         <div id="res-poses"></div>
         <ul class="wins" id="res-wins"></ul>
       </div>
+      <div class="card sleep-card" id="res-sleep" hidden></div>
       <div class="card">
         <label class="label" for="res-note">How are you feeling today? (optional)</label>
         <textarea id="res-note" rows="3" placeholder="e.g. Felt a little twitch in my cheek this morning"></textarea>
@@ -189,6 +210,7 @@
       </div>
       <div class="photo-grid" id="detail-photos"></div>
       <div class="card"><div id="detail-poses"></div></div>
+      <div class="card" id="detail-sleep-card" hidden><p class="label">Sleep the night before</p><p id="detail-sleep"></p></div>
       <div class="card" id="detail-note-card" hidden><p class="label">Your note</p><p id="detail-note"></p></div>
       <button class="btn danger" id="detail-delete">Delete this check-in</button>
     </section>

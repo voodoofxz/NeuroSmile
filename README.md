@@ -9,6 +9,10 @@ and shows how much things have improved — with encouragement along the way.
 
 ## What it does
 
+- **Required first-run setup** — symptom start date and baseline photos, so every
+  later check-in has an accurate starting point to compare against.
+- **Sleep log** — each check-in starts by asking how long you slept last night
+  (hours and minutes), shown alongside results and history.
 - **Guided 1-minute check-in** with four expressions: relaxed face, big smile,
   raised eyebrows, gently closed eyes (audio beeps guide the eyes-closed step).
 - **On-device face analysis** using Google MediaPipe Face Landmarker (478 points +

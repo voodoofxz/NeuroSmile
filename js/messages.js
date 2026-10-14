@@ -75,3 +75,15 @@ export function poseImprovementNote(title, now, base) {
   if (d >= 1) return `${title}: up ${d} since you started. Every bit counts.`;
   return null;
 }
+
+// Gentle context for last night's sleep, shown with the check-in result.
+export function sleepNote(minutes) {
+  if (minutes == null) return null;
+  if (minutes < 6 * 60) {
+    return 'A short night can make your face feel weaker or tighter, so be extra gentle with today’s numbers. Rest when you can — sleep is when a lot of healing happens.';
+  }
+  if (minutes < 7 * 60) {
+    return 'Decent rest. Your body does much of its repair work while you sleep, so a little extra tonight can only help.';
+  }
+  return 'Lovely — good sleep gives your healing nerve the best conditions to recover.';
+}
