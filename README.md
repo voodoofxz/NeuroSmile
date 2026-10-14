@@ -11,6 +11,8 @@ and shows how much things have improved — with encouragement along the way.
 
 - **Required first-run setup** — symptom start date and baseline photos, so every
   later check-in has an accurate starting point to compare against.
+- **Relax first** — an optional (recommended) 3-breath exercise before the photos so
+  the resting face is relaxed; check-ins that used it are marked in history.
 - **Sleep log** — each check-in starts by asking how long you slept last night
   (hours and minutes), shown alongside results and history.
 - **Guided 1-minute check-in** with four expressions: relaxed face, big smile,

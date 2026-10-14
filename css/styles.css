@@ -318,3 +318,11 @@ figcaption { font-size: 0.85rem; color: var(--muted); text-align: center; margin
 .sleep-card { display: flex; gap: 12px; align-items: flex-start; background: var(--lavender); color: var(--lavender-ink); border-color: transparent; }
 .sleep-card p { margin: 0; }
 .history-item .sleep { color: var(--muted); font-size: 0.8rem; }
+
+/* Relax before photos */
+.relax-step { display: flex; flex-direction: column; gap: 12px; }
+.relax-step h1 { margin: 0; font-size: 1.6rem; }
+.relax-step .lead { margin: 0; color: var(--ink-2); }
+.relax-step p { margin: 0; }
+.breathe-stage.small { padding: 18px 0; }
+.relax-step .btn + .btn { margin-top: 0; }

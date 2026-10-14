@@ -198,7 +198,7 @@ function stopCamera() {
 // Every check-in starts by asking about last night's sleep, then opens the camera.
 async function startCheckIn() {
   const list = await db.listCheckIns();
-  Object.assign(session, { poseIndex: 0, caps: {}, photos: {}, latest: null, busy: false, active: true, sleepMinutes: null });
+  Object.assign(session, { poseIndex: 0, caps: {}, photos: {}, latest: null, busy: false, active: true, sleepMinutes: null, relaxed: false });
   session.isBaseline = list.length === 0;
   const lastSleep = [...list].reverse().find((r) => r.sleepMinutes != null)?.sleepMinutes ?? 7 * 60;
   const opts = (values, fmt) => values.map((v) => `<option value="${v}">${fmt(v)}</option>`).join('');
@@ -207,17 +207,54 @@ async function startCheckIn() {
   $('sleep-hours').value = Math.min(14, Math.floor(lastSleep / 60));
   $('sleep-mins').value = Math.round((lastSleep % 60) / 5) * 5 % 60;
   $('sleep-step').hidden = false;
+  $('relax-step').hidden = true;
   $('camera-step').hidden = true;
   $('steps').innerHTML = '';
 }
 
 $('sleep-next').addEventListener('click', () => {
   session.sleepMinutes = Number($('sleep-hours').value) * 60 + Number($('sleep-mins').value);
+  showRelaxStep();
+});
+
+// Optional (but recommended) breathing before photos so the resting face is relaxed.
+const RELAX_BREATHS = 3;
+
+function showRelaxStep() {
+  session.relaxed = false;
   $('sleep-step').hidden = true;
+  $('relax-step').hidden = false;
+  $('relax-text').textContent = 'Ready';
+  $('relax-circle').style.transform = 'scale(0.7)';
+  $('relax-count').textContent = `About 35 seconds · ${RELAX_BREATHS} breaths`;
+  $('relax-start').hidden = false;
+  $('relax-skip').textContent = 'Skip to photos';
+  window.scrollTo(0, 0);
+}
+
+function goToCamera() {
+  stopBreathing();
+  $('relax-step').hidden = true;
   $('camera-step').hidden = false;
   window.scrollTo(0, 0);
   startCamera();
+}
+
+$('relax-start').addEventListener('click', () => {
+  $('relax-start').hidden = true;
+  $('relax-skip').textContent = 'I’m relaxed — start photos';
+  runBreathing($('relax-circle'), $('relax-text'), {
+    cycles: RELAX_BREATHS,
+    onCycle: (n) => ($('relax-count').textContent = `Breath ${n} of ${RELAX_BREATHS}`),
+    onDone: () => {
+      session.relaxed = true;
+      $('relax-text').textContent = 'Nicely done';
+      $('relax-count').textContent = 'You’re relaxed and ready 🌿';
+      setTimeout(() => session.active && !$('relax-step').hidden && goToCamera(), 1500);
+    },
+  });
 });
+$('relax-skip').addEventListener('click', goToCamera);
 
 async function startCamera() {
   renderPoseStep();
@@ -397,7 +434,7 @@ async function finishCheckIn() {
   stopCamera();
   const previous = await db.listCheckIns();
   const score = scoreCheckIn(session.caps);
-  const record = { date: Date.now(), ...score, sleepMinutes: session.sleepMinutes, photos: session.photos, note: '' };
+  const record = { date: Date.now(), ...score, sleepMinutes: session.sleepMinutes, relaxed: session.relaxed, photos: session.photos, note: '' };
   record.id = await db.addCheckIn(record);
   lastResult = { record, previous };
   go('result');
@@ -499,11 +536,18 @@ async function renderHistory() {
       <img src="${blobUrl(r.photos?.smile)}" alt="" />
       <div class="meta"><div class="date">${fmtDate(r.date)}</div>
         <div class="note">${r.note ? escapeHtml(r.note) : fmtTime(r.date)}</div>
-        ${r.sleepMinutes != null ? `<div class="sleep">😴 ${fmtSleep(r.sleepMinutes)} sleep</div>` : ''}</div>
+        ${historyExtras(r)}</div>
       <div class="score">${r.overall}${d == null ? '<small class="muted">baseline</small>'
         : `<small class="delta ${d > 0 ? 'up' : 'down'}">${signed(d)}</small>`}</div>
     </button>`;
   }).join('');
+}
+
+function historyExtras(r) {
+  const bits = [];
+  if (r.sleepMinutes != null) bits.push(`😴 ${fmtSleep(r.sleepMinutes)} sleep`);
+  if (r.relaxed) bits.push('🫧 relaxed first');
+  return bits.length ? `<div class="sleep">${bits.join(' · ')}</div>` : '';
 }
 
 const escapeHtml = (s) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -546,22 +590,25 @@ function stopBreathing() {
   clearTimeout(breatheTimer);
   breatheTimer = null;
 }
-$('breathe-circle').addEventListener('click', () => {
-  if (breatheTimer) {
-    stopBreathing();
-    renderBreathe();
-    return;
-  }
-  const circle = $('breathe-circle');
-  const text = $('breathe-text');
-  const phases = [
-    ['Breathe in…', 4000, 1],
-    ['Hold…', 2000, 1],
-    ['Breathe out…', 6000, 0.7],
-  ];
+const BREATH_PHASES = [
+  ['Breathe in…', 4000, 1],
+  ['Hold…', 2000, 1],
+  ['Breathe out…', 6000, 0.7],
+];
+
+// Animate a breathing circle (4 in, 2 hold, 6 out). Runs forever unless `cycles` is given,
+// in which case `onCycle(n)` fires as each breath starts and `onDone()` after the last one.
+function runBreathing(circle, text, { cycles = Infinity, onCycle, onDone } = {}) {
+  stopBreathing();
   let i = 0;
   const step = () => {
-    const [label, ms, scale] = phases[i % phases.length];
+    if (i === cycles * BREATH_PHASES.length) {
+      breatheTimer = null;
+      onDone?.();
+      return;
+    }
+    const [label, ms, scale] = BREATH_PHASES[i % BREATH_PHASES.length];
+    if (i % BREATH_PHASES.length === 0) onCycle?.(i / BREATH_PHASES.length + 1);
     text.textContent = label;
     circle.style.transitionDuration = `${ms}ms`;
     circle.style.transform = `scale(${scale})`;
@@ -569,6 +616,15 @@ $('breathe-circle').addEventListener('click', () => {
     breatheTimer = setTimeout(step, ms);
   };
   step();
+}
+
+$('breathe-circle').addEventListener('click', () => {
+  if (breatheTimer) {
+    stopBreathing();
+    renderBreathe();
+    return;
+  }
+  runBreathing($('breathe-circle'), $('breathe-text'));
 });
 
 // ---------------------------------------------------------------- theme
