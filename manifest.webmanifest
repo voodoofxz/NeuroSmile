@@ -1,6 +1,6 @@
 {
   "name": "Facial Realignment Progress",
-  "short_name": "Realignment",
+  "short_name": "Smile Again",
   "description": "Private, on-device facial symmetry check-ins for Bell's palsy recovery.",
   "start_url": "./",
   "scope": "./",
