@@ -98,3 +98,36 @@ export const JOURNEY_MESSAGES = [
 ];
 
 export const journeyMessage = () => pick(JOURNEY_MESSAGES);
+
+// Daily positive thoughts for the home screen. One per day (stable all day),
+// with the option to see another.
+export const POSITIVE_THOUGHTS = [
+  'My body knows how to heal, and it is healing right now.',
+  'Every small change is a step toward my full smile.',
+  'I am patient with myself. Healing has its own timing.',
+  'I am more than my reflection. My kindness and laughter are still me.',
+  'Today I will notice what is getting better, not just what is not there yet.',
+  'Rest is part of my recovery, not a pause from it.',
+  'I trust the process. Nerves heal slowly, and mine is on its way.',
+  'Each check-in is proof that I am showing up for myself.',
+  'I can feel calm, even while I wait.',
+  'My smile is coming back, one day at a time.',
+  'I celebrate small wins. They add up to big ones.',
+  'I am stronger than this moment.',
+  'Healing is happening even when I cannot see it.',
+  'I give myself the same kindness I would give a friend.',
+  'Slow progress is still progress.',
+  'I breathe in calm and breathe out worry.',
+  'This is temporary. My future self is smiling.',
+  'I am grateful for every bit of movement that returns.',
+  'I let go of rushing and make room for healing.',
+  'One gentle day at a time is enough.',
+];
+
+const dayOfYear = (d = new Date()) => Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 864e5);
+
+// Same thought all day; `offset` steps to the next one when asked for another.
+export function dailyThought(offset = 0) {
+  const n = POSITIVE_THOUGHTS.length;
+  return POSITIVE_THOUGHTS[(((dayOfYear() + offset) % n) + n) % n];
+}

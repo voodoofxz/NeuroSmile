@@ -16,6 +16,9 @@ and shows how much things have improved — with encouragement along the way.
 - **Gentle face exercises** — always available, with advice to start once check-ins show
   improvement (5+ points above the baseline, which is celebrated); recommends stretches
   for the two weakest movements, with safety guidance.
+- **Rich home screen** — a daily positive thought, latest score, 7-day chart, stats
+  (streak, check-ins, best, change, sleep, relaxed sessions), wins by movement versus the
+  baseline, and a recovery-journey timeline with typical milestones.
 - **Celebrations** — confetti and a soft chime whenever a check-in improves (bigger
   for big jumps), a welcome chime for the baseline, and a patience message with every
   result. Sounds can be turned off in Settings; confetti respects reduced motion.
@@ -72,6 +75,7 @@ npm test       # scoring unit tests (node --test)
 | `js/storage.js` | IndexedDB wrapper (check-ins + settings) |
 | `js/messages.js` | Encouragement and calming copy |
 | `js/chart.js` | Progress chart (inline SVG) |
+| `js/insights.js` | Home-screen stats, wins and recovery-journey calculations |
 | `js/celebrate.js` | Confetti and chime effects |
 | `js/exercises.js` | Exercise content, unlock rule and recommendations |
 | `sw.js` | Offline cache for the app shell and face model |

@@ -85,9 +85,12 @@
         <p class="sub" id="day-counter">Every check-in is a step forward</p>
       </header>
 
-      <div class="card calm" id="calm-card">
-        <div class="calm-icon" aria-hidden="true">🌿</div>
-        <p id="calm-text"></p>
+      <div class="card thought-card">
+        <div class="thought-head">
+          <p class="label">Today’s positive thought</p>
+          <button class="link small" id="thought-next" type="button">Another ↻</button>
+        </div>
+        <p class="thought" id="thought-text"></p>
       </div>
 
       <div class="card" id="last-card" hidden>
@@ -99,6 +102,8 @@
         <p class="muted" id="last-meta"></p>
       </div>
 
+      <button class="btn primary big" data-go="checkin" id="start-btn">Start today’s check-in</button>
+
       <div class="card week-card" id="week-card" data-go="history" role="link" tabindex="0" hidden>
         <p class="week-title" id="week-title"></p>
         <p class="week-sub" id="week-sub"></p>
@@ -106,7 +111,21 @@
         <p class="week-link">See all your progress ›</p>
       </div>
 
-      <button class="btn primary big" data-go="checkin" id="start-btn">Start today’s check-in</button>
+      <div class="stats-grid" id="stats-grid" hidden></div>
+
+      <div class="card wins-card" id="wins-card" hidden>
+        <p class="label">Your wins so far</p>
+        <p class="wins-summary" id="wins-summary"></p>
+        <div id="wins-list"></div>
+      </div>
+
+      <div class="card journey-card" id="journey-card" hidden>
+        <p class="label">Your recovery journey</p>
+        <p class="journey-headline" id="journey-headline"></p>
+        <div class="journey-track" id="journey-track"></div>
+        <p class="muted small-print" id="journey-note"></p>
+      </div>
+
       <button class="card exercise-card" id="exercise-card" data-go="exercises" hidden></button>
       <div class="btn-grid">
         <button class="btn" data-go="history">📈 Progress</button>

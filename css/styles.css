@@ -418,3 +418,50 @@ figcaption { font-size: 0.85rem; color: var(--muted); text-align: center; margin
 .week-chart { margin-top: 8px; }
 .week-chart svg { display: block; width: 100%; height: auto; overflow: visible; }
 .week-link { color: var(--accent); font-weight: 600; font-size: 0.9rem; text-align: right; margin-top: 4px !important; }
+
+/* Home: positive thought */
+.thought-card { background: linear-gradient(150deg, var(--accent-soft), var(--lavender)); border-color: transparent; }
+.thought-head { display: flex; justify-content: space-between; align-items: center; }
+.thought-head .label { margin: 0; }
+.link.small { font-size: 0.85rem; padding: 0; }
+.thought { margin: 8px 0 0; font-size: 1.15rem; line-height: 1.45; font-weight: 600; color: var(--ink); }
+.thought::before { content: '“'; color: var(--accent); font-size: 1.4em; line-height: 0; margin-right: 2px; }
+.thought::after { content: '”'; color: var(--accent); font-size: 1.4em; line-height: 0; margin-left: 2px; }
+
+/* Home: stats tiles */
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stat {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow);
+  padding: 12px 8px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; min-width: 0;
+}
+.stat-icon { font-size: 1.2rem; line-height: 1; }
+.stat-value { font-size: 1.35rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.stat.up .stat-value { color: var(--good); }
+.stat-label { font-size: 0.72rem; color: var(--muted); line-height: 1.2; }
+
+/* Home: wins by movement */
+.wins-summary { margin: 0 0 6px; font-weight: 600; }
+.win-row { padding: 8px 0; border-top: 1px solid var(--line); }
+.win-row:first-child { border-top: 0; }
+.win-head { display: flex; justify-content: space-between; font-weight: 600; }
+.win-change { font-size: 0.9rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.win-change.up { color: var(--good); }
+.win-bar { position: relative; height: 8px; background: var(--bar-track); border-radius: 4px; margin: 6px 0 4px; }
+.win-fill { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 4px; }
+.win-base { position: absolute; top: -3px; width: 2px; height: 14px; background: var(--ink-2); border-radius: 1px; transform: translateX(-1px); }
+.win-sub { margin: 0; font-size: 0.8rem; color: var(--muted); }
+.win-sub strong { color: var(--ink); }
+
+/* Home: recovery journey */
+.journey-headline { margin: 0 0 10px; }
+.journey-track { position: relative; height: 62px; margin: 0 6px; }
+.jt-line { position: absolute; top: 22px; left: 0; right: 0; height: 6px; background: var(--bar-track); border-radius: 3px; }
+.jt-done { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 3px; }
+.jt-stop { position: absolute; top: 19px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 2px solid var(--bar-track); transform: translateX(-50%); }
+.jt-stop.reached { border-color: var(--accent); background: var(--accent); }
+.jt-label { position: absolute; top: 38px; transform: translateX(-50%); font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+.jt-you { position: absolute; top: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; }
+.jt-you span { font-size: 0.68rem; font-weight: 700; color: var(--accent-ink); background: linear-gradient(135deg, var(--accent), var(--accent-2)); padding: 1px 6px; border-radius: 999px; box-shadow: 0 2px 8px var(--glow); }
+.jt-you::after { content: ''; width: 2px; height: 10px; background: var(--accent); margin-top: 1px; }
+.jt-label.first { transform: none; }
+.jt-label.last { transform: translateX(-100%); }

@@ -1,7 +1,8 @@
 import { POSES, normalize, frameFeatures, averageFrames, scoreCheckIn, framingHint } from './analysis.js';
 import * as db from './storage.js';
-import { calmReminder, encouragement, journeyMessage, poseImprovementNote, sleepNote, EYE_CARE_TIP } from './messages.js';
+import { calmReminder, dailyThought, encouragement, journeyMessage, poseImprovementNote, sleepNote, EYE_CARE_TIP } from './messages.js';
 import { confetti, chime } from './celebrate.js';
+import { stats as homeStats, wins as movementWins, journey as recoveryJourney, MILESTONES } from './insights.js';
 import { renderChart, renderWeekChart } from './chart.js';
 import { EXERCISES, SAFETY, UNLOCK_GAIN, improvementGain, recommendedFor } from './exercises.js';
 
@@ -123,8 +124,14 @@ $('welcome-onset-next').addEventListener('click', async () => {
 
 // ---------------------------------------------------------------- home
 
+let thoughtOffset = 0;
+$('thought-next').addEventListener('click', () => {
+  thoughtOffset++;
+  $('thought-text').textContent = dailyThought(thoughtOffset);
+});
+
 async function renderHome() {
-  $('calm-text').textContent = calmReminder();
+  $('thought-text').textContent = dailyThought(thoughtOffset);
   const [list, onset] = await Promise.all([db.listCheckIns(), db.getSetting('onset')]);
 
   const hour = new Date().getHours();
@@ -138,6 +145,9 @@ async function renderHome() {
   }
 
   renderWeekCard(list);
+  renderStats(list);
+  renderWins(list);
+  renderJourney(onset);
   renderExerciseCard(list, await improvementReached(list));
 
   const last = list.at(-1);
@@ -159,6 +169,73 @@ async function renderHome() {
   $('last-meta').textContent = today
     ? `Checked in today at ${fmtTime(last.date)}. See you tomorrow!`
     : `Last check-in ${fmtDate(last.date)}. Ready when you are.`;
+}
+
+// At-a-glance numbers: streak, totals, best, change, sleep and relaxed sessions.
+function renderStats(list) {
+  const grid = $('stats-grid');
+  grid.hidden = list.length === 0;
+  if (!list.length) return;
+  const s = homeStats(list);
+  const tiles = [
+    ['🔥', s.streak, 'day streak'],
+    ['✅', s.checkIns, s.checkIns === 1 ? 'check-in' : 'check-ins'],
+    ['⭐', s.best ?? '–', 'best score'],
+    ['📈', s.sinceStart == null ? '–' : signed(s.sinceStart), 'since you started', s.sinceStart > 0],
+    ['😴', s.avgSleep == null ? '–' : fmtSleep(s.avgSleep), 'avg sleep this week'],
+    ['🫧', s.relaxed, 'relaxed sessions'],
+  ];
+  grid.innerHTML = tiles.map(([icon, value, label, up]) => `<div class="stat${up ? ' up' : ''}">
+    <span class="stat-icon" aria-hidden="true">${icon}</span><span class="stat-value">${value}</span><span class="stat-label">${label}</span></div>`).join('');
+}
+
+// Each movement now vs. the baseline, celebrating what has improved.
+function renderWins(list) {
+  const card = $('wins-card');
+  const rows = movementWins(list);
+  card.hidden = rows.length === 0;
+  if (!rows.length) return;
+  const titles = Object.fromEntries(POSES.map((p) => [p.key, p.title]));
+  const improved = rows.filter((r) => r.change > 0).length;
+  $('wins-summary').textContent = improved
+    ? `🎉 ${improved} of ${rows.length} movements have improved since you started. Your face is healing!`
+    : 'Holding steady so far. Healing often happens quietly before it shows — keep going.';
+  $('wins-list').innerHTML = rows.map((r) => `<div class="win-row">
+    <div class="win-head"><span>${titles[r.key]}</span>
+      <span class="win-change ${r.change > 0 ? 'up' : ''}">${r.change > 0 ? `+${r.change} 🎉` : r.change === 0 ? 'steady' : 'settling'}</span></div>
+    <div class="win-bar" aria-label="${titles[r.key]}: ${r.base} at start, ${r.now} now">
+      <span class="win-fill" style="width:${r.now}%"></span><span class="win-base" style="left:${r.base}%"></span></div>
+    <p class="win-sub">${r.base} at start → <strong>${r.now}</strong> now</p></div>`).join('');
+}
+
+// Where they are on a typical recovery timeline, framed as encouragement.
+function renderJourney(onset) {
+  const card = $('journey-card');
+  const j = recoveryJourney(onset);
+  card.hidden = !j;
+  if (!j) return;
+  // Milestones are spread evenly along the track; the marker interpolates between them.
+  const pos = MILESTONES.map((_, i) => (i / (MILESTONES.length - 1)) * 100);
+  let at = 100;
+  for (let i = 0; i < MILESTONES.length - 1; i++) {
+    const a = MILESTONES[i].day; const b = MILESTONES[i + 1].day;
+    if (j.day <= b) { at = pos[i] + ((j.day - a) / (b - a)) * (pos[i + 1] - pos[i]); break; }
+  }
+  const phase = j.day <= 21
+    ? 'the early days. Rest, eye care and patience are your best tools right now.'
+    : j.day <= 90
+      ? 'the healing phase — when many people see movement return.'
+      : j.day <= 180
+        ? 'keep going! Many people continue to improve through this stage.'
+        : 'some recoveries take longer, and improvement can continue well beyond 6 months. Keep going, and keep your doctor in the loop.';
+  $('journey-headline').innerHTML = `<strong>Day ${j.day}</strong> — ${phase}`;
+  $('journey-track').innerHTML = `<div class="jt-line"><span class="jt-done" style="width:${at}%"></span></div>
+    ${MILESTONES.map((m, i) => `<span class="jt-stop${j.day >= m.day ? ' reached' : ''}" style="left:${pos[i]}%"></span>
+      <span class="jt-label${i === 0 ? ' first' : i === MILESTONES.length - 1 ? ' last' : ''}" style="left:${pos[i]}%">${m.label}</span>`).join('')}
+    <span class="jt-you" style="left:${at}%" title="You are here"><span>You</span></span>`;
+  $('journey-note').textContent = j.next
+    ? `Next: ${j.next.label} (${j.next.note.toLowerCase()}) in ${j.daysToNext} day${j.daysToNext === 1 ? '' : 's'}. These are typical timelines, not deadlines — everyone heals at their own pace.`
+    : 'These are typical timelines, not deadlines — everyone heals at their own pace.';
 }
 
 // The last 7 days on the home screen, celebrating any upward movement.
