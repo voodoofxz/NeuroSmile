@@ -87,3 +87,14 @@ export function sleepNote(minutes) {
   }
   return 'Lovely — good sleep gives your healing nerve the best conditions to recover.';
 }
+
+// Shown with every result: healing is a journey, and time is on their side.
+export const JOURNEY_MESSAGES = [
+  'Let the journey play out. Your nerve is healing on its own timeline, and every day brings you closer.',
+  'Healing takes time, and you are giving it exactly that. Trust the process — you will get there.',
+  'Nerves recover slowly but surely. Patience now is part of how you heal.',
+  'You don’t have to rush this. Keep showing up, and let time do its quiet work.',
+  'Each check-in is a step on the road back to your smile. The road is long, but it leads home.',
+];
+
+export const journeyMessage = () => pick(JOURNEY_MESSAGES);

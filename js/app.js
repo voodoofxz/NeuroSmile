@@ -1,6 +1,7 @@
 import { POSES, normalize, frameFeatures, averageFrames, scoreCheckIn, framingHint } from './analysis.js';
 import * as db from './storage.js';
-import { calmReminder, encouragement, poseImprovementNote, sleepNote, EYE_CARE_TIP } from './messages.js';
+import { calmReminder, encouragement, journeyMessage, poseImprovementNote, sleepNote, EYE_CARE_TIP } from './messages.js';
+import { confetti, chime } from './celebrate.js';
 import { renderChart } from './chart.js';
 import { EXERCISES, SAFETY, UNLOCK_GAIN, improvementGain, recommendedFor } from './exercises.js';
 
@@ -479,6 +480,16 @@ function compareChips(rec, list) {
     .filter(Boolean).join('') || '<span class="chip">Baseline check-in</span>';
 }
 
+// Confetti and a chime for any improvement (bigger for big jumps or unlocking
+// exercises); a soft welcome chime for the very first check-in.
+async function celebrate({ isFirst, delta, unlocked }) {
+  const sounds = (await db.getSetting('sounds')) !== false;
+  const kind = unlocked || delta >= 8 ? 'big' : delta >= 1 ? 'small' : isFirst ? 'welcome' : null;
+  if (!kind) return;
+  if (kind !== 'welcome') setTimeout(() => confetti(kind), 250);
+  if (sounds) chime(kind);
+}
+
 function renderResult() {
   if (!lastResult) return go('home');
   const { record: rec, previous } = lastResult;
@@ -492,6 +503,11 @@ function renderResult() {
   $('encourage-card').className = `card encourage tone-${msg.tone}`;
   $('encourage-title').textContent = msg.title;
   $('encourage-body').textContent = msg.body;
+  $('encourage-journey').textContent = journeyMessage();
+  if (!lastResult.celebrated) {
+    lastResult.celebrated = true;
+    celebrate({ isFirst: !prev, delta: prev ? rec.overall - prev.overall : 0, unlocked: lastResult.newlyUnlocked });
+  }
   $('res-unlock').hidden = !lastResult.newlyUnlocked;
   $('res-score').textContent = rec.overall;
   $('res-compare').innerHTML = compareChips(rec, [...previous, rec]);
@@ -721,7 +737,13 @@ async function renderExercises() {
 
 // ---------------------------------------------------------------- settings
 
+$('sounds-toggle').addEventListener('change', async (e) => {
+  await db.setSetting('sounds', e.target.checked);
+  if (e.target.checked) chime('welcome');
+});
+
 async function renderSettings() {
+  $('sounds-toggle').checked = (await db.getSetting('sounds')) !== false;
   $('onset').value = (await db.getSetting('onset')) || '';
   $('remind-time').value = (await db.getSetting('remindTime')) || '09:00';
 }
