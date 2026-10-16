@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="NeuroSmile" />
-  <meta name="description" content="NeuroSmile: a gentle companion for Bell's palsy recovery with private, on-device check-ins." />
+  <meta name="description" content="NeuroSmile: a gentle companion for recovery from Bell's palsy and Ramsay Hunt syndrome, with private, on-device check-ins." />
   <title>NeuroSmile</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/favicon-32.png" type="image/png" sizes="32x32" media="(prefers-color-scheme: light)" />
@@ -33,10 +33,10 @@
         <img class="welcome-logo logo-light" src="icons/icon-192.png" alt="" width="84" height="84" />
         <img class="welcome-logo logo-dark" src="icons/logo-dark-192.png" alt="" width="84" height="84" />
         <h1>Welcome to NeuroSmile</h1>
-        <p class="lead">A gentle companion for your Bell’s palsy recovery.</p>
+        <p class="lead">A gentle companion for recovering from Bell’s palsy or Ramsay Hunt syndrome.</p>
         <div class="card prose">
           <p>Each day you’ll take a quick 1-minute check-in. The app compares how the two sides of your face move and shows you every bit of progress — even the small steps.</p>
-          <p><strong>For most people, Bell’s palsy is temporary.</strong> Tracking it helps you see the healing as it happens.</p>
+          <p><strong>For most people, facial palsy gets better with time.</strong> Bell’s palsy often improves within weeks to months, and Ramsay Hunt syndrome usually takes longer. Every journey is different, and tracking helps you see the healing as it happens.</p>
           <p>🔒 Your photos never leave this phone. No account, no uploads.</p>
         </div>
         <div class="card why">
@@ -48,8 +48,17 @@
       </div>
 
       <div class="welcome-step" data-step="2" hidden>
-        <h1>When did it start?</h1>
-        <p class="lead">Knowing your start date lets us track your progress against a typical recovery timeline and show which day you’re on. A best guess is perfectly fine.</p>
+        <h1>About your recovery</h1>
+        <p class="lead">Knowing your condition and start date lets us show which day you’re on and the kinds of milestones that are possible for you. A best guess is perfectly fine.</p>
+        <div class="card">
+          <p class="label" id="welcome-condition-label">Which condition do you have?</p>
+          <div class="condition-picker" role="radiogroup" aria-labelledby="welcome-condition-label" id="welcome-condition">
+            <button type="button" role="radio" data-condition="bells">Bell’s palsy</button>
+            <button type="button" role="radio" data-condition="rhs">Ramsay Hunt syndrome</button>
+            <button type="button" role="radio" data-condition="unsure">Not sure</button>
+          </div>
+          <p class="muted small-print">Ramsay Hunt syndrome is caused by the shingles virus and often takes longer to recover from. You can change this any time in Settings.</p>
+        </div>
         <div class="card">
           <label class="label" for="welcome-onset">Date symptoms began</label>
           <input type="date" id="welcome-onset" />
@@ -120,7 +129,7 @@
       </div>
 
       <div class="card journey-card" id="journey-card" hidden>
-        <p class="label">Your recovery journey</p>
+        <p class="label">Your recovery journey <span id="journey-condition"></span></p>
         <p class="journey-headline" id="journey-headline"></p>
         <div class="journey-track" id="journey-track"></div>
         <p class="muted small-print" id="journey-note"></p>
@@ -321,6 +330,15 @@
         </label>
       </div>
       <div class="card">
+        <p class="label" id="settings-condition-label">Your condition</p>
+        <div class="condition-picker" role="radiogroup" aria-labelledby="settings-condition-label" id="settings-condition">
+          <button type="button" role="radio" data-condition="bells">Bell’s palsy</button>
+          <button type="button" role="radio" data-condition="rhs">Ramsay Hunt syndrome</button>
+          <button type="button" role="radio" data-condition="unsure">Not sure</button>
+        </div>
+        <p class="muted small-print">Used to tailor your recovery journey milestones.</p>
+      </div>
+      <div class="card">
         <label class="label" for="onset">When did your symptoms start?</label>
         <input type="date" id="onset" />
         <p class="muted small-print">Used to show “Day N of recovery”. Stays on this phone.</p>
@@ -359,6 +377,9 @@
           <li>Hold the phone at eye level, arm’s length away.</li>
           <li>Expect a few points of day-to-day wobble. Watch the trend.</li>
         </ul>
+        <h3>Bell’s palsy and Ramsay Hunt syndrome</h3>
+        <p>Both affect the facial nerve and can cause weakness on one side of the face. Ramsay Hunt syndrome is caused by the shingles virus and can also bring a painful rash in or around the ear, ear pain, or changes in hearing. Recovery from Ramsay Hunt syndrome usually takes longer, often many months, so be extra patient with yourself.</p>
+        <p>Whichever you have, your journey is your own. NeuroSmile shows possible milestones, not deadlines, and you can change your condition any time in Settings.</p>
         <h3>Look after your eye</h3>
         <p id="eye-tip"></p>
         <h3>Not medical advice</h3>

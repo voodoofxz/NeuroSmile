@@ -34,10 +34,20 @@ test('wins compare each movement with the baseline', () => {
   assert.deepEqual(wins([rec(0, 50)]), []);
 });
 
-test('journey finds the day and next milestone', () => {
-  const j = journey('2026-10-01', NOW);
+test('journey finds the day and next milestone for each condition', () => {
+  const j = journey('2026-10-01', NOW, 'bells');
   assert.equal(j.day, 16);
   assert.equal(j.next.day, 21);
   assert.equal(j.daysToNext, 5);
-  assert.equal(journey('2026-01-01', NOW).next, null);
+  const r = journey('2026-10-01', NOW, 'rhs');
+  assert.equal(r.next.day, 30);
+  assert.equal(r.milestones.at(-1).label, '1 year');
+  assert.equal(journey('2026-10-01', NOW, 'unsure').next.day, 30); // gentler timeline
+});
+
+test('journey stays open-ended past the last milestone', () => {
+  const late = journey('2026-01-01', NOW, 'bells');
+  assert.equal(late.next, null);
+  assert.equal(late.beyond, true);
+  assert.equal(journey('2026-01-01', NOW, 'rhs').beyond, false); // still within the first year
 });

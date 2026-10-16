@@ -38,17 +38,37 @@ export function wins(list) {
   }));
 }
 
-// Typical Bell's palsy recovery milestones (days since symptoms began).
-export const MILESTONES = [
-  { day: 1, label: 'Day 1', note: 'Your journey begins' },
-  { day: 21, label: '3 weeks', note: 'Many people notice first signs of movement' },
-  { day: 90, label: '3 months', note: 'Most people see clear recovery' },
-  { day: 180, label: '6 months', note: 'Most people have recovered fully' },
-];
+// Conditions the app supports. "Not sure" uses the longer, gentler timeline.
+export const CONDITIONS = {
+  bells: { name: 'Bell’s palsy' },
+  rhs: { name: 'Ramsay Hunt syndrome' },
+  unsure: { name: 'facial palsy' },
+};
 
-export function journey(onset, now = Date.now()) {
+// Possible milestones (days since symptoms began). These are encouragement,
+// not deadlines: the last one is a possible milestone, never a finish line.
+const MILESTONE_SETS = {
+  bells: [
+    { day: 1, label: 'Day 1', note: 'Your journey begins' },
+    { day: 21, label: '3 weeks', note: 'First signs of movement are possible' },
+    { day: 90, label: '3 months', note: 'Many people see clear improvement' },
+    { day: 180, label: '6 months', note: 'A possible milestone for many, not a finish line' },
+  ],
+  rhs: [
+    { day: 1, label: 'Day 1', note: 'Your journey begins' },
+    { day: 30, label: '1 month', note: 'Early signs of movement are possible' },
+    { day: 90, label: '3 months', note: 'Many people see movement returning' },
+    { day: 180, label: '6 months', note: 'Improvement often continues' },
+    { day: 365, label: '1 year', note: 'A possible milestone, and healing can continue beyond it' },
+  ],
+};
+
+export const milestonesFor = (condition) => MILESTONE_SETS[condition === 'bells' ? 'bells' : 'rhs'];
+
+export function journey(onset, now = Date.now(), condition = 'bells') {
   if (!onset) return null;
+  const milestones = milestonesFor(condition);
   const day = Math.max(1, Math.floor((dayStart(now) - new Date(`${onset}T00:00`).getTime()) / DAY) + 1);
-  const next = MILESTONES.find((m) => m.day > day) || null;
-  return { day, next, daysToNext: next ? next.day - day : 0 };
+  const next = milestones.find((m) => m.day > day) || null;
+  return { day, next, daysToNext: next ? next.day - day : 0, milestones, beyond: !next };
 }

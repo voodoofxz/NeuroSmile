@@ -3,7 +3,9 @@
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
 export const CALM_REMINDERS = [
-  'For most people, Bell’s palsy is temporary. Your nerve is healing, even on days you can’t see it.',
+  'For most people, facial palsy gets better with time. Your nerve is healing, even on days you can’t see it.',
+  'Some recoveries, like Ramsay Hunt syndrome, take longer. Slow progress is still progress.',
+  'Your journey is your own. Try not to compare your timeline with anyone else’s.',
   'Healing nerves grow slowly — about a millimeter a day. Slow is still forward.',
   'Stress and tension can make your face feel tighter. A few slow breaths help more than you’d think.',
   'Your face doesn’t define you. The people who love you see you, not the droop.',
@@ -118,7 +120,7 @@ export const POSITIVE_THOUGHTS = [
   'I give myself the same kindness I would give a friend.',
   'Slow progress is still progress.',
   'I breathe in calm and breathe out worry.',
-  'This is temporary. My future self is smiling.',
+  'This chapter will pass. My future self is smiling.',
   'I am grateful for every bit of movement that returns.',
   'I let go of rushing and make room for healing.',
   'One gentle day at a time is enough.',

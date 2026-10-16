@@ -2,7 +2,7 @@ import { POSES, normalize, frameFeatures, averageFrames, scoreCheckIn, framingHi
 import * as db from './storage.js';
 import { calmReminder, dailyThought, encouragement, journeyMessage, poseImprovementNote, sleepNote, EYE_CARE_TIP } from './messages.js';
 import { confetti, chime } from './celebrate.js';
-import { stats as homeStats, wins as movementWins, journey as recoveryJourney, MILESTONES } from './insights.js';
+import { stats as homeStats, wins as movementWins, journey as recoveryJourney, CONDITIONS } from './insights.js';
 import { renderChart, renderWeekChart } from './chart.js';
 import { EXERCISES, SAFETY, UNLOCK_GAIN, improvementGain, recommendedFor } from './exercises.js';
 
@@ -99,12 +99,25 @@ function showWelcomeStep(n) {
   window.scrollTo(0, 0);
 }
 
+// Condition pickers (setup and Settings) are radio groups of buttons.
+function selectCondition(group, value) {
+  group.querySelectorAll('[data-condition]').forEach((b) =>
+    b.setAttribute('aria-checked', String(b.dataset.condition === value)));
+}
+const pickedCondition = (group) => group.querySelector('[aria-checked="true"]')?.dataset.condition || null;
+const getCondition = async () => (await db.getSetting('condition')) || 'bells';
+
+function updateWelcomeContinue() {
+  $('welcome-onset-next').disabled = !$('welcome-onset').value || !pickedCondition($('welcome-condition'));
+}
+
 async function renderWelcome() {
   const { onset, hasBaseline } = await setupState();
   const input = $('welcome-onset');
   input.max = new Date().toISOString().slice(0, 10);
   input.value = onset || '';
-  $('welcome-onset-next').disabled = !input.value;
+  selectCondition($('welcome-condition'), await db.getSetting('condition'));
+  updateWelcomeContinue();
   // Resume where setup left off (e.g. after cancelling the baseline check-in).
   showWelcomeStep(onset ? 3 : hasBaseline ? 2 : 1);
 }
@@ -114,8 +127,15 @@ $('view-welcome').addEventListener('click', (e) => {
   if (e.target.closest('[data-welcome-next]')) showWelcomeStep(current + 1);
   if (e.target.closest('[data-welcome-back]')) showWelcomeStep(current - 1);
 });
-$('welcome-onset').addEventListener('input', (e) => ($('welcome-onset-next').disabled = !e.target.value));
+$('welcome-condition').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-condition]');
+  if (!btn) return;
+  selectCondition($('welcome-condition'), btn.dataset.condition);
+  updateWelcomeContinue();
+});
+$('welcome-onset').addEventListener('input', updateWelcomeContinue);
 $('welcome-onset-next').addEventListener('click', async () => {
+  await db.setSetting('condition', pickedCondition($('welcome-condition')));
   await db.setSetting('onset', $('welcome-onset').value);
   // Someone with check-ins from before setup was required only needs the date.
   if ((await setupState()).done) go('home');
@@ -132,7 +152,7 @@ $('thought-next').addEventListener('click', () => {
 
 async function renderHome() {
   $('thought-text').textContent = dailyThought(thoughtOffset);
-  const [list, onset] = await Promise.all([db.listCheckIns(), db.getSetting('onset')]);
+  const [list, onset, condition] = await Promise.all([db.listCheckIns(), db.getSetting('onset'), getCondition()]);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
@@ -147,7 +167,7 @@ async function renderHome() {
   renderWeekCard(list);
   renderStats(list);
   renderWins(list);
-  renderJourney(onset);
+  renderJourney(onset, condition);
   renderExerciseCard(list, await improvementReached(list));
 
   const last = list.at(-1);
@@ -208,34 +228,51 @@ function renderWins(list) {
     <p class="win-sub">${r.base} at start → <strong>${r.now}</strong> now</p></div>`).join('');
 }
 
-// Where they are on a typical recovery timeline, framed as encouragement.
-function renderJourney(onset) {
+// Stage messages for the journey card. Ramsay Hunt (and "not sure") use a slower,
+// gentler framing; nothing here promises a finish date.
+function journeyPhase(condition, day, beyond) {
+  const name = CONDITIONS[condition].name;
+  if (condition === 'bells') {
+    if (day <= 21) return 'the early days. Rest, eye care and patience are your best tools right now.';
+    if (day <= 90) return 'the healing phase, when many people see movement return.';
+    if (!beyond) return 'keep going! Many people continue to improve through this stage.';
+    return 'your journey is your own. Improvement can continue well beyond 6 months, so keep going and keep your doctor in the loop.';
+  }
+  if (day <= 30) return `the early days. ${name === 'facial palsy' ? 'Facial palsy' : name} often takes longer to recover from, so rest, eye care and patience are your best tools right now.`;
+  if (day <= 90) return 'nerves recover slowly, and early movement can be very subtle. Every small change counts.';
+  if (!beyond) return 'keep going! Recovery often continues steadily over many months.';
+  return 'your journey is your own, and improvement can continue beyond a year. Keep going, and stay in touch with your doctor.';
+}
+
+// Where they are on a possible-milestones timeline. The track stays open-ended:
+// the last milestone is followed by "& beyond", never a finish line.
+function renderJourney(onset, condition) {
   const card = $('journey-card');
-  const j = recoveryJourney(onset);
+  const j = recoveryJourney(onset, Date.now(), condition);
   card.hidden = !j;
   if (!j) return;
-  // Milestones are spread evenly along the track; the marker interpolates between them.
-  const pos = MILESTONES.map((_, i) => (i / (MILESTONES.length - 1)) * 100);
-  let at = 100;
-  for (let i = 0; i < MILESTONES.length - 1; i++) {
-    const a = MILESTONES[i].day; const b = MILESTONES[i + 1].day;
-    if (j.day <= b) { at = pos[i] + ((j.day - a) / (b - a)) * (pos[i + 1] - pos[i]); break; }
+  const ms = j.milestones;
+  // Milestones spread evenly over 0–82%; the rest of the track is the open "beyond".
+  const span = 82;
+  const pos = ms.map((_, i) => (i / (ms.length - 1)) * span);
+  let at = Math.min(97, span + ((j.day - ms.at(-1).day) / ms.at(-1).day) * (100 - span));
+  for (let i = 0; i < ms.length - 1; i++) {
+    if (j.day <= ms[i + 1].day) {
+      at = pos[i] + ((j.day - ms[i].day) / (ms[i + 1].day - ms[i].day)) * (pos[i + 1] - pos[i]);
+      break;
+    }
   }
-  const phase = j.day <= 21
-    ? 'the early days. Rest, eye care and patience are your best tools right now.'
-    : j.day <= 90
-      ? 'the healing phase — when many people see movement return.'
-      : j.day <= 180
-        ? 'keep going! Many people continue to improve through this stage.'
-        : 'some recoveries take longer, and improvement can continue well beyond 6 months. Keep going, and keep your doctor in the loop.';
-  $('journey-headline').innerHTML = `<strong>Day ${j.day}</strong> — ${phase}`;
-  $('journey-track').innerHTML = `<div class="jt-line"><span class="jt-done" style="width:${at}%"></span></div>
-    ${MILESTONES.map((m, i) => `<span class="jt-stop${j.day >= m.day ? ' reached' : ''}" style="left:${pos[i]}%"></span>
-      <span class="jt-label${i === 0 ? ' first' : i === MILESTONES.length - 1 ? ' last' : ''}" style="left:${pos[i]}%">${m.label}</span>`).join('')}
+  $('journey-condition').textContent = CONDITIONS[condition].name === 'facial palsy' ? '' : `· ${CONDITIONS[condition].name}`;
+  $('journey-headline').innerHTML = `<strong>Day ${j.day}</strong>: ${journeyPhase(condition, j.day, j.beyond)}`;
+  $('journey-track').innerHTML = `<div class="jt-line"><span class="jt-done" style="width:${at}%"></span><span class="jt-beyond" style="left:${span}%"></span></div>
+    ${ms.map((m, i) => `<span class="jt-stop${j.day >= m.day ? ' reached' : ''}" style="left:${pos[i]}%"></span>
+      <span class="jt-label${i === 0 ? ' first' : ''}${i % 2 ? ' row2' : ''}" style="left:${pos[i]}%">${m.label}</span>`).join('')}
+    <span class="jt-label last${ms.length % 2 ? ' row2' : ''}" style="left:100%">& beyond</span>
     <span class="jt-you" style="left:${at}%" title="You are here"><span>You</span></span>`;
+  const own = 'These are possible milestones, not deadlines. Everyone’s journey is different, and yours may look different from others’.';
   $('journey-note').textContent = j.next
-    ? `Next: ${j.next.label} (${j.next.note.toLowerCase()}) in ${j.daysToNext} day${j.daysToNext === 1 ? '' : 's'}. These are typical timelines, not deadlines — everyone heals at their own pace.`
-    : 'These are typical timelines, not deadlines — everyone heals at their own pace.';
+    ? `Next possible milestone: ${j.next.label}. ${j.next.note}. ${own}`
+    : `You’ve passed the last milestone on this chart, and healing can keep going from here. ${own}`;
 }
 
 // The last 7 days on the home screen, celebrating any upward movement.
@@ -871,7 +908,16 @@ $('sounds-toggle').addEventListener('change', async (e) => {
   if (e.target.checked) chime('welcome');
 });
 
+$('settings-condition').addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-condition]');
+  if (!btn) return;
+  selectCondition($('settings-condition'), btn.dataset.condition);
+  await db.setSetting('condition', btn.dataset.condition);
+  toast('Saved');
+});
+
 async function renderSettings() {
+  selectCondition($('settings-condition'), await getCondition());
   $('sounds-toggle').checked = (await db.getSetting('sounds')) !== false;
   $('onset').value = (await db.getSetting('onset')) || '';
   $('remind-time').value = (await db.getSetting('remindTime')) || '09:00';
@@ -909,7 +955,7 @@ $('remind-btn').addEventListener('click', async () => {
     `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`,
     `DTSTART:${ymd}T${hh}${mm}00`, 'DURATION:PT5M', 'RRULE:FREQ=DAILY',
     'SUMMARY:NeuroSmile check-in 🌿',
-    'DESCRIPTION:A quick 1-minute check-in. Breathe\\, be patient\\, this is temporary.',
+    'DESCRIPTION:A quick 1-minute check-in. Breathe\\, be patient\\, healing takes time.',
     'BEGIN:VALARM', 'TRIGGER:PT0M', 'ACTION:DISPLAY', 'DESCRIPTION:Time for your NeuroSmile check-in', 'END:VALARM',
     'END:VEVENT', 'END:VCALENDAR',
   ].join('\r\n');

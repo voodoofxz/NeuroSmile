@@ -454,7 +454,7 @@ figcaption { font-size: 0.85rem; color: var(--muted); text-align: center; margin
 
 /* Home: recovery journey */
 .journey-headline { margin: 0 0 10px; }
-.journey-track { position: relative; height: 62px; margin: 0 6px; }
+.journey-track { position: relative; height: 74px; margin: 0 6px; }
 .jt-line { position: absolute; top: 22px; left: 0; right: 0; height: 6px; background: var(--bar-track); border-radius: 3px; }
 .jt-done { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 3px; }
 .jt-stop { position: absolute; top: 19px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 2px solid var(--bar-track); transform: translateX(-50%); }
@@ -465,3 +465,18 @@ figcaption { font-size: 0.85rem; color: var(--muted); text-align: center; margin
 .jt-you::after { content: ''; width: 2px; height: 10px; background: var(--accent); margin-top: 1px; }
 .jt-label.first { transform: none; }
 .jt-label.last { transform: translateX(-100%); }
+
+/* Condition picker */
+.condition-picker { display: grid; gap: 8px; margin-bottom: 8px; }
+.condition-picker button {
+  appearance: none; font: inherit; font-weight: 600; text-align: left; cursor: pointer;
+  padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink);
+}
+.condition-picker button[aria-checked="true"] {
+  border-color: var(--accent); background: var(--accent-soft);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.condition-picker button[aria-checked="true"]::after { content: ' ✓'; color: var(--accent); }
+.jt-beyond { position: absolute; top: 0; right: 0; height: 100%; background: repeating-linear-gradient(90deg, transparent 0 4px, var(--surface) 4px 8px); opacity: 0.85; }
+#journey-condition { text-transform: none; letter-spacing: 0; font-weight: 600; }
+.jt-label.row2 { top: 52px; }

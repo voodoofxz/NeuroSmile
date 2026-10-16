@@ -1,15 +1,17 @@
 # NeuroSmile
 
-*A gentle companion for Bell's palsy recovery.*
+*A gentle companion for recovery from Bell's palsy and Ramsay Hunt syndrome.*
 
-A private, phone-friendly web app that tracks facial recovery from Bell's palsy.
+A private, phone-friendly web app that tracks facial recovery from Bell's palsy and
+Ramsay Hunt syndrome.
 Each daily check-in uses the phone's front camera and on-device face tracking to
 measure how evenly the two sides of the face move, saves photos **only on the phone**,
 and shows how much things have improved — with encouragement along the way.
 
 ## What it does
 
-- **Required first-run setup** — symptom start date and baseline photos, so every
+- **Required first-run setup** — condition (Bell's palsy, Ramsay Hunt syndrome or not
+  sure), symptom start date and baseline photos, so every
   later check-in has an accurate starting point to compare against.
 - **Relax first** — an optional (recommended) 3-breath exercise before the photos so
   the resting face is relaxed; check-ins that used it are marked in history.
@@ -18,7 +20,8 @@ and shows how much things have improved — with encouragement along the way.
   for the two weakest movements, with safety guidance.
 - **Rich home screen** — a daily positive thought, latest score, 7-day chart, stats
   (streak, check-ins, best, change, sleep, relaxed sessions), wins by movement versus the
-  baseline, and a recovery-journey timeline with typical milestones.
+  baseline, and an open-ended recovery-journey timeline of possible milestones tailored to
+  the condition (Ramsay Hunt syndrome uses a longer timeline).
 - **Celebrations** — confetti and a soft chime whenever a check-in improves (bigger
   for big jumps), a welcome chime for the baseline, and a patience message with every
   result. Sounds can be turned off in Settings; confetti respects reduced motion.
@@ -34,7 +37,7 @@ and shows how much things have improved — with encouragement along the way.
 - **Local photo history** — every check-in's four photos, notes and scores, a
   progress chart, and a side-by-side *first vs. latest smile* comparison.
 - **Encouragement** tuned to the result: celebrates even a 1-point gain, reframes
-  flat days, and reminds you the condition is usually temporary.
+  flat days, and reminds you that healing takes time and every journey is different.
 - **Calm tools** — rotating reassurance messages, a guided breathing exercise,
   eye-care reminder, "Day N of recovery" counter.
 - **Daily reminder** via a repeating calendar event (`.ics`) created on the phone.
