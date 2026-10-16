@@ -13,6 +13,8 @@ and shows how much things have improved — with encouragement along the way.
   later check-in has an accurate starting point to compare against.
 - **Relax first** — an optional (recommended) 3-breath exercise before the photos so
   the resting face is relaxed; check-ins that used it are marked in history.
+- **Gentle face exercises** — unlock once a check-in scores 5+ points above the
+  baseline; recommends stretches for the two weakest movements, with safety guidance.
 - **Sleep log** — each check-in starts by asking how long you slept last night
   (hours and minutes), shown alongside results and history.
 - **Guided 1-minute check-in** with four expressions: relaxed face, big smile,
@@ -66,6 +68,7 @@ npm test       # scoring unit tests (node --test)
 | `js/storage.js` | IndexedDB wrapper (check-ins + settings) |
 | `js/messages.js` | Encouragement and calming copy |
 | `js/chart.js` | Progress chart (inline SVG) |
+| `js/exercises.js` | Exercise content, unlock rule and recommendations |
 | `sw.js` | Offline cache for the app shell and face model |
 
 ## How the score is calculated

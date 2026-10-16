@@ -98,6 +98,7 @@
       </div>
 
       <button class="btn primary big" data-go="checkin" id="start-btn">Start today’s check-in</button>
+      <button class="card exercise-card" id="exercise-card" data-go="exercises" hidden></button>
       <div class="btn-grid">
         <button class="btn" data-go="history">📈 Progress</button>
         <button class="btn" data-go="breathe">🫧 Breathe</button>
@@ -175,6 +176,10 @@
         <div id="res-poses"></div>
         <ul class="wins" id="res-wins"></ul>
       </div>
+      <button class="card unlock-card" id="res-unlock" data-go="exercises" hidden>
+        <span class="unlock-icon" aria-hidden="true">🎉</span>
+        <span><strong>You’ve unlocked gentle face exercises!</strong><br>Your face is showing real improvement, so it’s a good time to start some gentle movement. Tap to see what’s recommended for you.</span>
+      </button>
       <div class="card sleep-card" id="res-sleep" hidden></div>
       <div class="card">
         <label class="label" for="res-note">How are you feeling today? (optional)</label>
@@ -237,6 +242,34 @@
       </div>
       <p class="center muted">Breathe in for 4, hold for 2, out for 6. Let your jaw and cheeks soften.</p>
       <div class="card calm small"><p id="breathe-calm"></p></div>
+    </section>
+
+    <!-- EXERCISES -->
+    <section id="view-exercises" class="view" data-view="exercises" hidden>
+      <header class="app-header with-back">
+        <button class="link" data-go="home">‹ Home</button>
+        <h1>Gentle face exercises</h1>
+      </header>
+      <div id="ex-locked" hidden>
+        <div class="card prose">
+          <p><strong>These unlock once your face starts to improve.</strong></p>
+          <p>Gentle exercises help most once movement begins to return. Until then, rest, eye care and your daily check-ins are the best things you can do.</p>
+          <div class="bar unlock-bar"><span id="ex-lock-bar"></span></div>
+          <p class="muted small-print" id="ex-lock-text"></p>
+        </div>
+      </div>
+      <div id="ex-unlocked" hidden>
+        <p class="lead" id="ex-lead"></p>
+        <div class="card safety">
+          <p class="label">Before you start</p>
+          <ul id="ex-safety"></ul>
+        </div>
+        <h2 class="section-title">Recommended for you</h2>
+        <div id="ex-recommended"></div>
+        <h2 class="section-title">All exercises</h2>
+        <div id="ex-all"></div>
+        <p class="disclaimer">General guidance only, not a treatment plan. A facial physiotherapist can tailor exercises to your recovery.</p>
+      </div>
     </section>
 
     <!-- SETTINGS -->

@@ -337,3 +337,43 @@ figcaption { font-size: 0.85rem; color: var(--muted); text-align: center; margin
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand img { width: 36px; height: 36px; border-radius: 10px; box-shadow: 0 2px 10px var(--glow); }
 .welcome-logo { width: 84px; height: 84px; border-radius: 22px; margin-top: 12px; box-shadow: 0 6px 26px var(--glow); }
+
+/* Exercises */
+.exercise-card, .unlock-card {
+  display: flex; gap: 12px; align-items: center; text-align: left; width: 100%;
+  font: inherit; color: inherit; cursor: pointer;
+}
+.exercise-card .ex-icon, .unlock-icon { font-size: 1.6rem; line-height: 1; }
+.exercise-card .ex-body { flex: 1; min-width: 0; }
+.exercise-card .ex-title { font-weight: 700; display: block; }
+.exercise-card .ex-sub { color: var(--ink-2); font-size: 0.9rem; display: block; }
+.exercise-card.locked { background: var(--bar-track); border-color: transparent; box-shadow: none; }
+.exercise-card.locked .ex-sub { color: var(--muted); }
+.exercise-card .chev { color: var(--accent); font-size: 1.4rem; }
+.unlock-card { background: var(--good-soft); border-color: transparent; color: var(--ink); }
+.unlock-card strong { color: var(--good); }
+.unlock-bar { height: 10px; margin: 12px 0 0; }
+#view-exercises .lead { margin: 0; color: var(--ink-2); }
+#ex-unlocked { display: flex; flex-direction: column; gap: 12px; }
+#ex-unlocked[hidden] { display: none; }
+.card.safety { background: var(--lavender); border-color: transparent; color: var(--lavender-ink); }
+.card.safety ul { margin: 0; padding-left: 18px; }
+.card.safety li { margin: 4px 0; }
+.section-title { font-size: 1.1rem; margin: 8px 0 0; }
+.exercise {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  margin-bottom: 10px; box-shadow: var(--shadow); overflow: hidden;
+}
+.exercise summary {
+  list-style: none; cursor: pointer; padding: 14px 16px; display: flex; gap: 12px; align-items: center;
+}
+.exercise summary::-webkit-details-marker { display: none; }
+.exercise summary .ex-icon { font-size: 1.5rem; }
+.exercise summary .ex-name { font-weight: 700; display: block; }
+.exercise summary .ex-dose { color: var(--muted); font-size: 0.85rem; display: block; }
+.exercise summary::after { content: '+'; margin-left: auto; color: var(--accent); font-size: 1.4rem; font-weight: 700; }
+.exercise[open] summary::after { content: '–'; }
+.exercise .ex-detail { padding: 0 16px 14px; }
+.exercise ol { margin: 0 0 8px; padding-left: 20px; color: var(--ink-2); }
+.exercise li { margin: 4px 0; }
+.exercise .ex-tip { margin: 0; font-size: 0.9rem; color: var(--calm-ink); background: var(--calm); padding: 8px 10px; border-radius: 10px; }

@@ -2,6 +2,7 @@ import { POSES, normalize, frameFeatures, averageFrames, scoreCheckIn, framingHi
 import * as db from './storage.js';
 import { calmReminder, encouragement, poseImprovementNote, sleepNote, EYE_CARE_TIP } from './messages.js';
 import { renderChart } from './chart.js';
+import { EXERCISES, SAFETY, UNLOCK_GAIN, improvementGain, recommendedFor } from './exercises.js';
 
 const MP_VERSION = '0.10.14';
 const MP_BASE = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VERSION}`;
@@ -39,7 +40,7 @@ function toast(text, ms = 2600) {
 
 // ---------------------------------------------------------------- routing
 
-const VIEWS = ['welcome', 'home', 'checkin', 'result', 'history', 'detail', 'breathe', 'settings', 'about'];
+const VIEWS = ['welcome', 'home', 'checkin', 'result', 'history', 'detail', 'breathe', 'exercises', 'settings', 'about'];
 
 function go(view) {
   const hash = view === 'home' ? '' : `#${view}`;
@@ -65,7 +66,7 @@ async function route() {
   for (const v of VIEWS) $(`view-${v}`).hidden = v !== name;
   window.scrollTo(0, 0);
   const render = { welcome: renderWelcome, home: renderHome, checkin: startCheckIn, result: renderResult, history: renderHistory,
-    detail: () => renderDetail(Number(arg)), breathe: renderBreathe, settings: renderSettings, about: renderAbout };
+    detail: () => renderDetail(Number(arg)), breathe: renderBreathe, exercises: renderExercises, settings: renderSettings, about: renderAbout };
   await render[name]?.();
 }
 
@@ -127,6 +128,8 @@ async function renderHome() {
   } else {
     counter.textContent = `${greeting} 🌿 Every check-in is a step forward`;
   }
+
+  renderExerciseCard(list, await exercisesUnlocked(list));
 
   const last = list.at(-1);
   $('start-btn').textContent = last ? 'Start today’s check-in' : 'Take your baseline photos';
@@ -436,7 +439,9 @@ async function finishCheckIn() {
   const score = scoreCheckIn(session.caps);
   const record = { date: Date.now(), ...score, sleepMinutes: session.sleepMinutes, relaxed: session.relaxed, photos: session.photos, note: '' };
   record.id = await db.addCheckIn(record);
-  lastResult = { record, previous };
+  const wasUnlocked = await exercisesUnlocked(previous);
+  const newlyUnlocked = !wasUnlocked && (await exercisesUnlocked([...previous, record]));
+  lastResult = { record, previous, newlyUnlocked };
   go('result');
 }
 
@@ -487,6 +492,7 @@ function renderResult() {
   $('encourage-card').className = `card encourage tone-${msg.tone}`;
   $('encourage-title').textContent = msg.title;
   $('encourage-body').textContent = msg.body;
+  $('res-unlock').hidden = !lastResult.newlyUnlocked;
   $('res-score').textContent = rec.overall;
   $('res-compare').innerHTML = compareChips(rec, [...previous, rec]);
   $('res-poses').innerHTML = poseRows(rec);
@@ -653,6 +659,65 @@ $('theme-picker').addEventListener('click', (e) => {
   applyTheme(choice);
 });
 darkQuery.addEventListener('change', () => applyTheme(getTheme()));
+
+// ---------------------------------------------------------------- exercises
+
+// Exercises unlock once a check-in beats the baseline by UNLOCK_GAIN, and stay unlocked.
+async function exercisesUnlocked(list) {
+  if (await db.getSetting('exercisesUnlocked')) return true;
+  if (improvementGain(list) < UNLOCK_GAIN) return false;
+  await db.setSetting('exercisesUnlocked', true);
+  return true;
+}
+
+const POSE_NAMES = { rest: 'resting face', smile: 'smile', brows: 'eyebrows', eyes: 'eye closing' };
+
+function renderExerciseCard(list, unlocked) {
+  const card = $('exercise-card');
+  card.hidden = list.length === 0;
+  if (!list.length) return;
+  card.classList.toggle('locked', !unlocked);
+  if (unlocked) {
+    const { weakest } = recommendedFor(list.at(-1));
+    card.innerHTML = `<span class="ex-icon" aria-hidden="true">💪</span><span class="ex-body">
+      <span class="ex-title">Gentle face exercises</span>
+      <span class="ex-sub">Recommended for your ${weakest.map((w) => POSE_NAMES[w]).join(' and ')}</span></span>
+      <span class="chev" aria-hidden="true">›</span>`;
+  } else {
+    const togo = Math.max(1, UNLOCK_GAIN - Math.max(0, improvementGain(list)));
+    card.innerHTML = `<span class="ex-icon" aria-hidden="true">🔒</span><span class="ex-body">
+      <span class="ex-title">Gentle face exercises</span>
+      <span class="ex-sub">Unlock when your score improves ${togo} more point${togo === 1 ? '' : 's'} above your baseline. Every check-in helps us spot it.</span></span>`;
+  }
+}
+
+function exerciseHtml(e, open = false) {
+  return `<details class="exercise"${open ? ' open' : ''}>
+    <summary><span class="ex-icon" aria-hidden="true">${e.icon}</span>
+      <span><span class="ex-name">${e.title}</span><span class="ex-dose">${e.dose}</span></span></summary>
+    <div class="ex-detail"><ol>${e.steps.map((st) => `<li>${st}</li>`).join('')}</ol>
+      <p class="ex-tip">💡 ${e.tip}</p></div>
+  </details>`;
+}
+
+async function renderExercises() {
+  const list = await db.listCheckIns();
+  const unlocked = await exercisesUnlocked(list);
+  $('ex-locked').hidden = unlocked;
+  $('ex-unlocked').hidden = !unlocked;
+  if (!unlocked) {
+    const gain = Math.max(0, improvementGain(list));
+    $('ex-lock-bar').style.width = `${Math.min(100, (gain / UNLOCK_GAIN) * 100)}%`;
+    $('ex-lock-text').textContent = `${gain} of ${UNLOCK_GAIN} points of improvement so far. Keep checking in — you’ll get there.`;
+    return;
+  }
+  const { weakest, exercises } = recommendedFor(list.at(-1));
+  $('ex-lead').textContent = `Your face is improving 🌱 These gentle movements can support your recovery. Based on your latest check-in, we suggest focusing on your ${weakest.map((w) => POSE_NAMES[w]).join(' and ')}.`;
+  $('ex-safety').innerHTML = SAFETY.map((t) => `<li>${t}</li>`).join('');
+  $('ex-recommended').innerHTML = exercises.map((e, i) => exerciseHtml(e, i === 0)).join('');
+  const picked = new Set(exercises.map((e) => e.id));
+  $('ex-all').innerHTML = EXERCISES.filter((e) => !picked.has(e.id)).map((e) => exerciseHtml(e)).join('');
+}
 
 // ---------------------------------------------------------------- settings
 
