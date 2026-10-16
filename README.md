@@ -58,7 +58,7 @@ The app must be served over HTTPS for camera access. The easiest option is GitHu
 
 1. In the GitHub repo go to **Settings → Pages**.
 2. Source: **Deploy from a branch**, branch `main`, folder `/ (root)`. Save.
-3. Open `https://voodoofxz.github.io/bells-palsy-facemontior/` on the phone.
+3. Open `https://voodoofxz.github.io/NeuroSmile/` (the address is case-sensitive) on the phone.
 4. Add it to the home screen (Safari: Share → *Add to Home Screen*; Chrome: ⋮ →
    *Install app*). It then opens full-screen like a normal app and works offline.
 
