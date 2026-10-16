@@ -407,3 +407,14 @@ figcaption { font-size: 0.85rem; color: var(--muted); text-align: center; margin
   :root:not([data-theme="light"]) .logo-light { display: none !important; }
   :root:not([data-theme="light"]) .logo-dark { display: inline-block !important; }
 }
+
+/* Home: last 7 days */
+.week-card { cursor: pointer; }
+.week-card.up { background: linear-gradient(160deg, var(--good-soft), var(--surface) 70%); }
+.week-card p { margin: 0; }
+.week-title { font-weight: 700; font-size: 1.1rem; }
+.week-card.up .week-title { color: var(--good); }
+.week-sub { color: var(--ink-2); font-size: 0.92rem; margin-top: 2px !important; }
+.week-chart { margin-top: 8px; }
+.week-chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.week-link { color: var(--accent); font-weight: 600; font-size: 0.9rem; text-align: right; margin-top: 4px !important; }

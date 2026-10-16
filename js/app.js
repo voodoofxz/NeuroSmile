@@ -2,7 +2,7 @@ import { POSES, normalize, frameFeatures, averageFrames, scoreCheckIn, framingHi
 import * as db from './storage.js';
 import { calmReminder, encouragement, journeyMessage, poseImprovementNote, sleepNote, EYE_CARE_TIP } from './messages.js';
 import { confetti, chime } from './celebrate.js';
-import { renderChart } from './chart.js';
+import { renderChart, renderWeekChart } from './chart.js';
 import { EXERCISES, SAFETY, UNLOCK_GAIN, improvementGain, recommendedFor } from './exercises.js';
 
 const MP_VERSION = '0.10.14';
@@ -75,6 +75,13 @@ document.addEventListener('click', (e) => {
   const target = e.target.closest('[data-go]');
   if (target) go(target.dataset.go);
 });
+document.addEventListener('keydown', (e) => {
+  const target = e.target.closest?.('[data-go][role="link"]');
+  if (target && (e.key === 'Enter' || e.key === ' ')) {
+    e.preventDefault();
+    go(target.dataset.go);
+  }
+});
 window.addEventListener('hashchange', route);
 
 // ---------------------------------------------------------------- welcome
@@ -130,6 +137,7 @@ async function renderHome() {
     counter.textContent = `${greeting} 🌿 Every check-in is a step forward`;
   }
 
+  renderWeekCard(list);
   renderExerciseCard(list, await improvementReached(list));
 
   const last = list.at(-1);
@@ -151,6 +159,49 @@ async function renderHome() {
   $('last-meta').textContent = today
     ? `Checked in today at ${fmtTime(last.date)}. See you tomorrow!`
     : `Last check-in ${fmtDate(last.date)}. Ready when you are.`;
+}
+
+// The last 7 days on the home screen, celebrating any upward movement.
+function renderWeekCard(list) {
+  const card = $('week-card');
+  card.hidden = list.length === 0;
+  if (!list.length) return;
+  const dayStart = (t) => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
+  const today = dayStart(Date.now());
+  const windowStart = today - 6 * 864e5;
+  const days = [...Array(7)].map((_, i) => {
+    const start = windowStart + i * 864e5;
+    const onDay = list.filter((r) => dayStart(r.date) === dayStart(start));
+    const isToday = i === 6;
+    return { label: isToday ? 'Today' : new Date(start).toLocaleDateString(undefined, { weekday: 'short' }),
+      value: onDay.length ? onDay.at(-1).overall : null, today: isToday };
+  });
+  const inWeek = list.filter((r) => r.date >= windowStart);
+  const before = list.filter((r) => r.date < windowStart).at(-1);
+  const ref = inWeek.length >= 2 ? inWeek[0] : before;
+  const change = inWeek.length && ref ? inWeek.at(-1).overall - ref.overall : null;
+
+  let title = 'Your week at a glance';
+  let sub;
+  if (!inWeek.length) {
+    title = 'Your week';
+    sub = 'No check-ins in the last 7 days yet. A quick check-in keeps your progress picture clear.';
+  } else if (change == null) {
+    title = 'Your journey has begun 🌱';
+    sub = 'Check in again over the coming days and your progress will appear here.';
+  } else if (change >= 1) {
+    title = '🎉 Look at your progress!';
+    sub = `Up ${change} point${change === 1 ? '' : 's'} this week. Your face is healing — keep going.`;
+  } else if (change === 0) {
+    sub = 'Holding steady this week. Healing often happens quietly before it shows.';
+  } else {
+    sub = 'A little day-to-day wobble is normal — lighting and tiredness play a part. The bigger trend is what counts.';
+  }
+  card.classList.toggle('up', change != null && change >= 1);
+  $('week-title').textContent = title;
+  $('week-sub').textContent = sub;
+  $('week-chart').hidden = !inWeek.length;
+  if (inWeek.length) renderWeekChart($('week-chart'), days);
 }
 
 // ---------------------------------------------------------------- face landmarker

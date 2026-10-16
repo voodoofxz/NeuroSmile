@@ -64,3 +64,34 @@ export function renderChart(el, points, onSelect) {
     if (active) onSelect(active.id);
   });
 }
+
+// Compact 7-day chart for the home screen. `days` = 7 entries, oldest first:
+// { label, value (score or null), today }. Days without a check-in are skipped
+// by the line, so gaps don't read as drops.
+export function renderWeekChart(el, days) {
+  const WW = 340;
+  const WH = 130;
+  const P = { top: 22, right: 14, bottom: 24, left: 14 };
+  const vals = days.map((d) => d.value).filter((v) => v != null);
+  let lo = Math.min(...vals) - 8;
+  let hi = Math.max(...vals) + 8;
+  if (hi - lo < 24) { const mid = (hi + lo) / 2; lo = mid - 12; hi = mid + 12; }
+  lo = Math.max(0, lo);
+  hi = Math.min(100, hi);
+  const step = (WW - P.left - P.right) / (days.length - 1);
+  const x = (i) => P.left + i * step;
+  const y = (v) => P.top + (1 - (v - lo) / (hi - lo)) * (WH - P.top - P.bottom);
+  const pts = days.map((d, i) => (d.value == null ? null : [x(i), y(d.value), d]));
+  const drawn = pts.filter(Boolean);
+  const path = drawn.map(([px, py], i) => `${i ? 'L' : 'M'}${px.toFixed(1)},${py.toFixed(1)}`).join('');
+  const last = drawn.at(-1);
+
+  el.innerHTML = `<svg viewBox="0 0 ${WW} ${WH}" role="img" aria-label="Symmetry scores for the last 7 days">
+    <line x1="${P.left}" x2="${WW - P.right}" y1="${WH - P.bottom}" y2="${WH - P.bottom}" stroke="var(--line)" stroke-width="1" />
+    ${days.map((d, i) => `<text x="${x(i)}" y="${WH - 6}" text-anchor="middle" font-size="11"
+      fill="${d.today ? 'var(--accent)' : 'var(--muted)'}" font-weight="${d.today ? 700 : 400}">${d.label}</text>`).join('')}
+    ${drawn.length > 1 ? `<path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />` : ''}
+    ${drawn.map(([px, py, d]) => `<circle cx="${px}" cy="${py}" r="5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"><title>${d.label}: ${d.value}</title></circle>`).join('')}
+    ${last ? `<text x="${Math.min(last[0], WW - P.right - 8)}" y="${last[1] - 10}" text-anchor="middle" font-size="12" font-weight="700" fill="var(--ink)">${last[2].value}</text>` : ''}
+  </svg>`;
+}
