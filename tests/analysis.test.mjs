@@ -73,3 +73,29 @@ test('head tilt does not change features', () => {
   assert.ok(Math.abs(a.left.mouthY - b.left.mouthY) < 1e-9);
   assert.ok(Math.abs(a.right.eyeOpen - b.right.eyeOpen) < 1e-9);
 });
+
+test('no movement on either side is "not measured", not scored from noise', () => {
+  const r = checkIn({ smile: [0.001, 0.0002], brow: [0.0005, 0], eye: [1, 1] });
+  assert.equal(r.poses.smile.score, null);
+  assert.equal(r.poses.brows.score, null);
+  assert.equal(r.poses.eyes.score, null);
+  assert.ok(r.poses.rest.score >= 95);
+  assert.equal(r.overall, r.poses.rest.score); // only the measured expression counts
+});
+
+test('one weak side is still measured because the other side moves', () => {
+  const r = checkIn({ smile: [0.05, 0] });
+  assert.ok(r.poses.smile.score != null && r.poses.smile.score < 30);
+  assert.equal(r.poses.smile.weaker, 'left');
+});
+
+test('score change only compares movements measured in both check-ins', async () => {
+  const { scoreChange } = await import('../js/analysis.js');
+  const full = (rest, smile, brows, eyes) => ({ poses: { rest: { score: rest }, smile: { score: smile }, brows: { score: brows }, eyes: { score: eyes } } });
+  const a = full(80, 40, 50, 60);
+  const b = full(85, 50, 55, 70);
+  const overall = (r) => Math.round(0.2 * r.poses.rest.score + 0.35 * r.poses.smile.score + 0.2 * r.poses.brows.score + 0.25 * r.poses.eyes.score);
+  assert.equal(scoreChange(a, b), overall(b) - overall(a)); // fully measured = plain difference
+  const restOnly = full(93, null, null, null);
+  assert.equal(scoreChange(restOnly, b), 85 - 93); // only the relaxed face is comparable
+});

@@ -26,6 +26,7 @@ async function run(store, mode, fn) {
     const req = fn(tx.objectStore(store));
     tx.oncomplete = () => resolve(req?.result);
     tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error || new Error('Storage transaction aborted')); // e.g. storage full
   });
 }
 

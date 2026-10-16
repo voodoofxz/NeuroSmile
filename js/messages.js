@@ -72,6 +72,7 @@ export function encouragement({ delta, fromBaseline, isFirst }) {
 
 // One-line nudge comparing a pose to the first check-in.
 export function poseImprovementNote(title, now, base) {
+  if (now == null || base == null) return null;
   const d = now - base;
   if (d >= 5) return `${title}: up ${d} since you started — wonderful.`;
   if (d >= 1) return `${title}: up ${d} since you started. Every bit counts.`;

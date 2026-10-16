@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { streak, stats, wins, journey } from '../js/insights.js';
+import { streak, stats, wins, journey, recoveryDay } from '../js/insights.js';
 
 const DAY = 864e5;
 const NOW = new Date('2026-10-16T15:00:00').getTime();
@@ -50,4 +50,15 @@ test('journey stays open-ended past the last milestone', () => {
   assert.equal(late.next, null);
   assert.equal(late.beyond, true);
   assert.equal(journey('2026-01-01', NOW, 'rhs').beyond, false); // still within the first year
+});
+
+test('streak and recovery day survive daylight-saving changes', () => {
+  // Ten daily check-ins at 9am spanning the US fall-back (Nov 1) and spring-forward (Mar 8) dates.
+  for (const start of ['2026-10-27', '2027-03-03']) {
+    const list = [...Array(10)].map((_, i) => { const d = new Date(`${start}T09:00`); d.setDate(d.getDate() + i); return { date: d.getTime(), overall: 50 }; });
+    const now = list.at(-1).date + 3600e3;
+    assert.equal(streak(list, now), 10, start);
+  }
+  assert.equal(recoveryDay('2027-03-01', new Date('2027-03-20T12:00').getTime()), 20);
+  assert.equal(recoveryDay('2026-10-16', new Date('2026-10-16T23:59').getTime()), 1);
 });

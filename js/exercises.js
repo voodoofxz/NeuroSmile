@@ -2,6 +2,8 @@
 // to start once check-ins show improvement.
 // General guidance only: slow, small, symmetric movements; never forceful.
 
+import { scoreChange } from './analysis.js';
+
 // Points above the baseline score before we say it is a good time to start. Day-to-day
 // noise is a few points, so this is a real, if early, improvement.
 export const UNLOCK_GAIN = 5;
@@ -135,16 +137,16 @@ export const SAFETY = [
   'If you notice linked movements — like your eye closing when you smile — stop those exercises and ask a facial therapist for guidance.',
 ];
 
-// Best improvement so far: highest later score minus the baseline.
+// Best improvement so far vs. the baseline (comparing only movements measured in both).
 export function improvementGain(list) {
   if (list.length < 2) return 0;
-  const base = list[0].overall;
-  return Math.max(...list.slice(1).map((r) => r.overall)) - base;
+  return Math.max(...list.slice(1).map((r) => scoreChange(list[0], r)));
 }
 
 // Exercises for the two weakest movements in the latest check-in, plus the warm-up.
 export function recommendedFor(latest) {
   const weakest = ['smile', 'brows', 'eyes', 'rest']
+    .filter((k) => latest.poses[k].score != null) // unmeasured movements can't be ranked
     .sort((a, b) => latest.poses[a].score - latest.poses[b].score)
     .slice(0, 2);
   const picked = EXERCISES.filter((e) => e.id === 'massage' || e.areas.some((a) => weakest.includes(a)));

@@ -119,7 +119,25 @@ function blendRatio(blend, base) {
 
 const mix = (geo, blend) => (blend == null ? geo : 0.7 * geo + 0.3 * blend);
 
+// Below these, neither side really moved, so any left/right "ratio" is just
+// camera noise. A genuinely weak side still passes because the stronger side moves.
+const MIN_MOVEMENT = { smile: 0.04, brows: 0.02, eyes: 0.3 };
+
+// Per-side movement for an expression, measured from the relaxed capture.
+export function poseMovement(key, rest, cap) {
+  const side = {
+    smile: (s) => Math.hypot(cap[s].mouthX - rest[s].mouthX, cap[s].mouthY - rest[s].mouthY),
+    brows: (s) => Math.max(0, rest[s].browY - cap[s].browY), // y grows downward
+    eyes: (s) => clamp((rest[s].eyeOpen - cap[s].eyeOpen) / Math.max(1e-6, rest[s].eyeOpen), 0, 1),
+  }[key];
+  const right = side('right');
+  const left = side('left');
+  return { right, left, enough: Math.max(right, left) >= MIN_MOVEMENT[key] };
+}
+
 // Score a full check-in. `caps` = { rest, smile, brows, eyes } averaged captures.
+// An expression with too little movement to measure gets score: null and is left
+// out of the overall score instead of being scored from noise.
 export function scoreCheckIn(caps) {
   const { rest, smile, brows, eyes } = caps;
   const poses = {};
@@ -134,52 +152,36 @@ export function scoreCheckIn(caps) {
     detail: { mouthCornerDifference: droop, eyeOpeningRatio: restEye },
   };
 
-  // Smile: how far each mouth corner travels from rest.
-  const exc = (s) => Math.hypot(smile[s].mouthX - rest[s].mouthX, smile[s].mouthY - rest[s].mouthY);
-  const smR = exc('right');
-  const smL = exc('left');
-  const smGeo = ratio(smR, smL);
-  poses.smile = {
-    score: 100 * mix(smGeo, blendRatio(smile.blend, 'mouthSmile')),
-    movementRatio: smGeo,
-    weaker: weakerSide(smR, smL),
-    lowEffort: Math.max(smR, smL) < 0.04,
-  };
-
-  // Brows: how far each brow lifts (y grows downward, so rest - raised).
-  const lift = (s) => Math.max(0, rest[s].browY - brows[s].browY);
-  const brR = lift('right');
-  const brL = lift('left');
-  const brGeo = ratio(brR, brL);
-  poses.brows = {
-    score: 100 * mix(brGeo, blendRatio(brows.blend, 'browOuterUp')),
-    movementRatio: brGeo,
-    weaker: weakerSide(brR, brL),
-    lowEffort: Math.max(brR, brL) < 0.02,
-  };
-
+  // Smile: how far each mouth corner travels. Brows: how far each brow lifts.
   // Eyes: fraction of the rest opening that closes.
-  const close = (s) => clamp((rest[s].eyeOpen - eyes[s].eyeOpen) / Math.max(1e-6, rest[s].eyeOpen), 0, 1);
-  const ecR = close('right');
-  const ecL = close('left');
-  const ecGeo = ratio(ecR, ecL);
-  poses.eyes = {
-    score: 100 * mix(ecGeo, blendRatio(eyes.blend, 'eyeBlink')),
-    movementRatio: ecGeo,
-    weaker: weakerSide(ecR, ecL),
-    lowEffort: Math.max(ecR, ecL) < 0.3,
-    closure: { right: ecR, left: ecL },
-  };
+  const moving = [
+    ['smile', smile, 'mouthSmile'],
+    ['brows', brows, 'browOuterUp'],
+    ['eyes', eyes, 'eyeBlink'],
+  ];
+  for (const [key, cap, blendKey] of moving) {
+    const m = poseMovement(key, rest, cap);
+    const geo = ratio(m.right, m.left);
+    poses[key] = m.enough
+      ? { score: 100 * mix(geo, blendRatio(cap.blend, blendKey)), movementRatio: geo, weaker: weakerSide(m.right, m.left) }
+      : { score: null, movementRatio: null, weaker: null, lowEffort: true };
+    if (key === 'eyes') poses[key].closure = { right: m.right, left: m.left };
+  }
 
-  let overall = 0;
+  // Overall = weighted average of the measured expressions.
+  let total = 0;
+  let weight = 0;
   const votes = { right: 0, left: 0 };
   for (const p of POSES) {
-    poses[p.key].score = Math.round(poses[p.key].score);
-    overall += poses[p.key].score * p.weight;
-    votes[poses[p.key].weaker] += p.weight * (100 - poses[p.key].score);
+    const pose = poses[p.key];
+    if (pose.score == null) continue;
+    pose.score = Math.round(pose.score);
+    total += pose.score * p.weight;
+    weight += p.weight;
+    votes[pose.weaker] += p.weight * (100 - pose.score);
   }
   return {
-    overall: Math.round(overall),
+    overall: Math.round(total / weight),
     poses,
     weakerSide: votes.right >= votes.left ? 'right' : 'left',
   };
@@ -194,4 +196,22 @@ export function framingHint(norm, features, videoWidth) {
   if (features.yaw < 0.8 || features.yaw > 1.25) return { ok: false, text: 'Turn to face the camera straight on' };
   if (Math.abs(norm.rollDeg) > 12) return { ok: false, text: 'Hold your head level' };
   return { ok: true, text: 'Great — hold steady' };
+}
+
+// Score change between two check-ins, counting only the expressions measured in
+// both, so a check-in with an unmeasured movement isn't compared unfairly.
+// Equals to.overall - from.overall whenever both were fully measured.
+export function scoreChange(from, to) {
+  let a = 0;
+  let b = 0;
+  let w = 0;
+  for (const p of POSES) {
+    const x = from?.poses?.[p.key]?.score;
+    const y = to?.poses?.[p.key]?.score;
+    if (x == null || y == null) continue;
+    a += x * p.weight;
+    b += y * p.weight;
+    w += p.weight;
+  }
+  return w ? Math.round(b / w) - Math.round(a / w) : 0;
 }

@@ -489,3 +489,6 @@ figcaption { font-size: 0.85rem; color: var(--muted); text-align: center; margin
 .jt-beyond { position: absolute; top: 0; right: 0; height: 100%; background: repeating-linear-gradient(90deg, transparent 0 4px, var(--surface) 4px 8px); opacity: 0.85; }
 #journey-condition { text-transform: none; letter-spacing: 0; font-weight: 600; }
 .jt-label.row2 { top: 52px; }
+button.breathe-circle { border: 0; padding: 0; font-family: inherit; }
+.breathe-circle:focus-visible { outline: 3px solid var(--accent); outline-offset: 6px; }
+.chip.partial { background: var(--lavender); color: var(--lavender-ink); }

@@ -1,8 +1,8 @@
-import { POSES, normalize, frameFeatures, averageFrames, scoreCheckIn, framingHint } from './analysis.js';
+import { POSES, normalize, frameFeatures, averageFrames, scoreCheckIn, framingHint, poseMovement, scoreChange } from './analysis.js';
 import * as db from './storage.js';
 import { calmReminder, dailyThought, encouragement, journeyMessage, poseImprovementNote, sleepNote, EYE_CARE_TIP } from './messages.js';
 import { confetti, chime } from './celebrate.js';
-import { stats as homeStats, wins as movementWins, journey as recoveryJourney, CONDITIONS } from './insights.js';
+import { stats as homeStats, wins as movementWins, journey as recoveryJourney, CONDITIONS, recoveryDay, todayKey, dateKey, addDays } from './insights.js';
 import { renderChart, renderWeekChart } from './chart.js';
 import { EXERCISES, SAFETY, UNLOCK_GAIN, improvementGain, recommendedFor } from './exercises.js';
 
@@ -44,11 +44,15 @@ function toast(text, ms = 2600) {
 
 const VIEWS = ['welcome', 'home', 'checkin', 'result', 'history', 'detail', 'breathe', 'exercises', 'settings', 'about'];
 
-function go(view) {
+// `replace` swaps the current history entry, for one-way steps like check-in → result.
+function go(view, { replace = false } = {}) {
   const hash = view === 'home' ? '' : `#${view}`;
   // Same hash fires no hashchange (e.g. leaving the welcome screen for home), so route directly.
   if (location.hash === hash) route();
-  else location.hash = hash;
+  else if (replace) {
+    history.replaceState(null, '', hash || location.pathname + location.search);
+    route();
+  } else location.hash = hash;
 }
 
 async function route() {
@@ -108,13 +112,14 @@ const pickedCondition = (group) => group.querySelector('[aria-checked="true"]')?
 const getCondition = async () => (await db.getSetting('condition')) || 'bells';
 
 function updateWelcomeContinue() {
-  $('welcome-onset-next').disabled = !$('welcome-onset').value || !pickedCondition($('welcome-condition'));
+  const date = $('welcome-onset').value;
+  $('welcome-onset-next').disabled = !date || date > todayKey() || !pickedCondition($('welcome-condition'));
 }
 
 async function renderWelcome() {
   const { onset, hasBaseline } = await setupState();
   const input = $('welcome-onset');
-  input.max = new Date().toISOString().slice(0, 10);
+  input.max = todayKey(); // local date; toISOString would be UTC
   input.value = onset || '';
   selectCondition($('welcome-condition'), await db.getSetting('condition'));
   updateWelcomeContinue();
@@ -158,7 +163,7 @@ async function renderHome() {
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   const counter = $('day-counter');
   if (onset) {
-    const days = Math.max(1, Math.floor((Date.now() - new Date(onset + 'T00:00').getTime()) / 864e5) + 1);
+    const days = recoveryDay(onset);
     counter.textContent = `${greeting} 🌿 Day ${days} of your recovery`;
   } else {
     counter.textContent = `${greeting} 🌿 Every check-in is a step forward`;
@@ -178,7 +183,7 @@ async function renderHome() {
   const base = list[0];
   const d = $('last-delta');
   if (list.length > 1) {
-    const fromBase = last.overall - base.overall;
+    const fromBase = scoreChange(base, last);
     d.textContent = `${signed(fromBase)} since you started`;
     d.className = `delta ${fromBase > 0 ? 'up' : 'down'}`;
   } else {
@@ -203,7 +208,7 @@ function renderStats(list) {
     ['⭐', s.best ?? '–', 'best score'],
     ['📈', s.sinceStart == null ? '–' : signed(s.sinceStart), 'since you started', s.sinceStart > 0],
     ['😴', s.avgSleep == null ? '–' : fmtSleep(s.avgSleep), 'avg sleep this week'],
-    ['🫧', s.relaxed, 'relaxed sessions'],
+    ['🫧', s.relaxed, s.relaxed === 1 ? 'relaxed session' : 'relaxed sessions'],
   ];
   grid.innerHTML = tiles.map(([icon, value, label, up]) => `<div class="stat${up ? ' up' : ''}">
     <span class="stat-icon" aria-hidden="true">${icon}</span><span class="stat-value">${value}</span><span class="stat-label">${label}</span></div>`).join('');
@@ -280,12 +285,10 @@ function renderWeekCard(list) {
   const card = $('week-card');
   card.hidden = list.length === 0;
   if (!list.length) return;
-  const dayStart = (t) => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
-  const today = dayStart(Date.now());
-  const windowStart = today - 6 * 864e5;
+  const windowStart = addDays(Date.now(), -6);
   const days = [...Array(7)].map((_, i) => {
-    const start = windowStart + i * 864e5;
-    const onDay = list.filter((r) => dayStart(r.date) === dayStart(start));
+    const start = addDays(windowStart, i);
+    const onDay = list.filter((r) => dateKey(r.date) === dateKey(start));
     const isToday = i === 6;
     return { label: isToday ? 'Today' : new Date(start).toLocaleDateString(undefined, { weekday: 'short' }),
       value: onDay.length ? onDay.at(-1).overall : null, today: isToday };
@@ -293,7 +296,7 @@ function renderWeekCard(list) {
   const inWeek = list.filter((r) => r.date >= windowStart);
   const before = list.filter((r) => r.date < windowStart).at(-1);
   const ref = inWeek.length >= 2 ? inWeek[0] : before;
-  const change = inWeek.length && ref ? inWeek.at(-1).overall - ref.overall : null;
+  const change = inWeek.length && ref ? scoreChange(ref, inWeek.at(-1)) : null;
 
   let title = 'Your week at a glance';
   let sub;
@@ -354,7 +357,12 @@ const session = {
   busy: false,
 };
 
+// Bumped whenever a check-in starts or the camera stops. Async steps remember
+// the value they started with and bail out if it changed (cancel, leave, restart).
+let checkInGen = 0;
+
 function stopCamera() {
+  checkInGen++;
   session.active = false;
   cancelAnimationFrame(session.raf);
   session.raf = 0;
@@ -362,19 +370,21 @@ function stopCamera() {
   session.stream = null;
   session.collecting = null;
   session.busy = false;
+  $('countdown').hidden = true; // a cancelled capture must not leave its countdown behind
 }
 
 // Every check-in starts by asking about last night's sleep, then opens the camera.
 async function startCheckIn() {
+  stopCamera(); // end anything left over from an earlier check-in
   const list = await db.listCheckIns();
-  Object.assign(session, { poseIndex: 0, caps: {}, photos: {}, latest: null, busy: false, active: true, sleepMinutes: null, relaxed: false });
+  Object.assign(session, { poseIndex: 0, caps: {}, photos: {}, latest: null, busy: false, active: true, sleepMinutes: null, relaxed: false, retried: {} });
   session.isBaseline = list.length === 0;
-  const lastSleep = [...list].reverse().find((r) => r.sleepMinutes != null)?.sleepMinutes ?? 7 * 60;
+  const lastSleep = Math.round(([...list].reverse().find((r) => r.sleepMinutes != null)?.sleepMinutes ?? 7 * 60) / 5) * 5;
   const opts = (values, fmt) => values.map((v) => `<option value="${v}">${fmt(v)}</option>`).join('');
   $('sleep-hours').innerHTML = opts([...Array(15).keys()], String);
   $('sleep-mins').innerHTML = opts([...Array(12).keys()].map((i) => i * 5), (m) => String(m).padStart(2, '0'));
   $('sleep-hours').value = Math.min(14, Math.floor(lastSleep / 60));
-  $('sleep-mins').value = Math.round((lastSleep % 60) / 5) * 5 % 60;
+  $('sleep-mins').value = lastSleep % 60;
   $('sleep-step').hidden = false;
   $('relax-step').hidden = true;
   $('camera-step').hidden = true;
@@ -432,16 +442,22 @@ async function startCamera() {
   loading.textContent = 'Starting camera…';
   $('capture-btn').disabled = true;
 
+  const gen = checkInGen;
+  let stream;
   try {
-    session.stream = await navigator.mediaDevices.getUserMedia({
+    stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: 'user', width: { ideal: 960 }, height: { ideal: 1280 } },
       audio: false,
     });
   } catch (err) {
-    loading.textContent = 'Camera access is needed for check-ins. Please allow the camera in your browser settings and try again.';
+    if (gen === checkInGen) loading.textContent = 'Camera access is needed for check-ins. Please allow the camera in your browser settings and try again.';
     return;
   }
-  if (!session.active) return stopCamera(); // left the screen while the camera was starting
+  if (gen !== checkInGen) { // left the screen while the camera was starting
+    stream.getTracks().forEach((t) => t.stop());
+    return;
+  }
+  session.stream = stream;
   const video = $('video');
   video.srcObject = session.stream;
   await video.play().catch(() => {});
@@ -451,22 +467,22 @@ async function startCamera() {
   try {
     landmarker = await getLandmarker();
   } catch {
-    loading.textContent = 'Couldn’t load face analysis. Connect to the internet once so it can download, then try again.';
+    if (gen === checkInGen) loading.textContent = 'Couldn’t load face analysis. Connect to the internet once so it can download, then try again.';
     return;
   }
-  if (!session.stream) return; // user cancelled while loading
+  if (gen !== checkInGen) return; // cancelled while loading
   loading.hidden = true;
-  loop(landmarker);
+  loop(landmarker, gen);
 }
 
-function loop(landmarker) {
+function loop(landmarker, gen) {
   const video = $('video');
   const overlay = $('overlay');
   const ctx = overlay.getContext('2d');
   let lastTime = -1;
 
   const tick = () => {
-    if (!session.stream) return;
+    if (!session.stream || gen !== checkInGen) return;
     session.raf = requestAnimationFrame(tick);
     if (video.readyState < 2 || video.currentTime === lastTime) return;
     lastTime = video.currentTime;
@@ -549,8 +565,10 @@ function snapshot() {
 }
 
 async function capturePose() {
-  if (session.busy) return;
+  if (session.busy || !session.stream) return;
   session.busy = true;
+  const gen = checkInGen;
+  const stale = () => gen !== checkInGen; // cancelled or restarted while waiting
   const pose = POSES[session.poseIndex];
   const btn = $('capture-btn');
   const cd = $('countdown');
@@ -562,9 +580,11 @@ async function capturePose() {
     cd.textContent = n;
     beep(n === 1 ? 880 : 660);
     await wait(900);
+    if (stale()) return;
   }
   cd.textContent = '';
   if (pose.key === 'eyes') await wait(500); // give the eyelids time to settle
+  if (stale()) return;
 
   session.collecting = [];
   const started = performance.now();
@@ -576,7 +596,7 @@ async function capturePose() {
   const frames = session.collecting;
   session.collecting = null;
   cd.hidden = true;
-  if (!session.stream) return; // cancelled
+  if (stale()) return;
   if (pose.key === 'eyes') { beep(880, 100); await wait(160); beep(880, 100); }
 
   if (!frames || frames.length < 6) {
@@ -584,8 +604,17 @@ async function capturePose() {
     toast('We lost sight of your face — let’s try that one again.');
     return;
   }
-  session.caps[pose.key] = averageFrames(frames);
+  const cap = averageFrames(frames);
+  // Almost no movement on either side: offer one more try before accepting it.
+  if (pose.key !== 'rest' && !session.retried[pose.key] && !poseMovement(pose.key, session.caps.rest, cap).enough) {
+    session.retried[pose.key] = true;
+    session.busy = false;
+    toast('We didn’t see much movement — let’s try once more, a little bigger if it’s comfortable.', 4000);
+    return;
+  }
+  session.caps[pose.key] = cap;
   session.photos[pose.key] = await (photo ?? snapshot());
+  if (stale()) return;
   session.busy = false;
   session.poseIndex++;
 
@@ -604,11 +633,17 @@ async function finishCheckIn() {
   const previous = await db.listCheckIns();
   const score = scoreCheckIn(session.caps);
   const record = { date: Date.now(), ...score, sleepMinutes: session.sleepMinutes, relaxed: session.relaxed, photos: session.photos, note: '' };
-  record.id = await db.addCheckIn(record);
+  try {
+    record.id = await db.addCheckIn(record);
+  } catch {
+    toast('Couldn’t save this check-in. Your phone may be low on storage — free some space and try again.', 6000);
+    go('home', { replace: true });
+    return;
+  }
   const wasUnlocked = await improvementReached(previous);
   const newlyUnlocked = !wasUnlocked && (await improvementReached([...previous, record]));
   lastResult = { record, previous, newlyUnlocked };
-  go('result');
+  go('result', { replace: true }); // Back from the result shouldn't reopen the camera
 }
 
 $('capture-btn').addEventListener('click', capturePose);
@@ -620,17 +655,18 @@ function poseRows(rec) {
   return POSES.map((p) => {
     const r = rec.poses[p.key];
     let sub;
-    if (p.key === 'rest') {
+    if (r.score == null) {
+      sub = 'Not measured this time — we didn’t see enough movement. It doesn’t count against your score.';
+    } else if (p.key === 'rest') {
       sub = r.score >= 95 ? 'Your face looks balanced at rest.' : `Resting balance. ${cap(sideName(r.weaker))} side sits a little lower.`;
     } else if (r.movementRatio != null && r.score < 97) {
       sub = `${cap(sideName(r.weaker))} side is moving at about ${Math.round(r.movementRatio * 100)}% of the other side.`;
     } else {
       sub = 'Both sides moving evenly.';
     }
-    if (r.lowEffort) sub += ' (Small movement captured — a little bigger next time if comfortable.)';
     return `<div class="pose-row">
-      <div class="pose-head"><span>${p.title}</span><span class="val">${r.score}</span></div>
-      <div class="bar"><span style="width:${r.score}%"></span></div>
+      <div class="pose-head"><span>${p.title}</span><span class="val">${r.score ?? '–'}</span></div>
+      <div class="bar"><span style="width:${r.score ?? 0}%"></span></div>
       <p class="pose-sub">${sub}</p></div>`;
   }).join('');
 }
@@ -641,8 +677,11 @@ function compareChips(rec, list) {
   const prev = idx > 0 ? list[idx - 1] : null;
   const base = list[0] && list[0].id !== rec.id ? list[0] : null;
   const chip = (label, d) => `<span class="chip ${d > 0 ? 'up' : ''}">${signed(d)} ${label}</span>`;
-  return [prev && chip('vs. previous', rec.overall - prev.overall), base && chip('since first check-in', rec.overall - base.overall)]
-    .filter(Boolean).join('') || '<span class="chip">Baseline check-in</span>';
+  const measured = POSES.filter((p) => rec.poses[p.key]?.score != null).length;
+  const partial = measured < POSES.length
+    ? `<span class="chip partial">Based on ${measured} of ${POSES.length} movements</span>` : '';
+  return ([prev && chip('vs. previous', scoreChange(prev, rec)), base && chip('since first check-in', scoreChange(base, rec))]
+    .filter(Boolean).join('') || '<span class="chip">Baseline check-in</span>') + partial;
 }
 
 // Confetti and a chime for any improvement (bigger for big jumps or unlocking
@@ -662,8 +701,8 @@ function renderResult() {
   const base = previous[0];
   const msg = encouragement({
     isFirst: !prev,
-    delta: prev ? rec.overall - prev.overall : 0,
-    fromBaseline: base ? rec.overall - base.overall : 0,
+    delta: prev ? scoreChange(prev, rec) : 0,
+    fromBaseline: base ? scoreChange(base, rec) : 0,
   });
   $('encourage-card').className = `card encourage tone-${msg.tone}`;
   $('encourage-title').textContent = msg.title;
@@ -671,7 +710,7 @@ function renderResult() {
   $('encourage-journey').textContent = journeyMessage();
   if (!lastResult.celebrated) {
     lastResult.celebrated = true;
-    celebrate({ isFirst: !prev, delta: prev ? rec.overall - prev.overall : 0, unlocked: lastResult.newlyUnlocked });
+    celebrate({ isFirst: !prev, delta: prev ? scoreChange(prev, rec) : 0, unlocked: lastResult.newlyUnlocked });
   }
   $('res-unlock').hidden = !lastResult.newlyUnlocked;
   $('res-score').textContent = rec.overall;
@@ -695,7 +734,7 @@ $('res-done').addEventListener('click', async () => {
     lastResult = null;
   }
   toast('Saved on this phone ✓');
-  go('home');
+  go('home', { replace: true });
 });
 
 // ---------------------------------------------------------------- history
@@ -718,7 +757,7 @@ async function renderHistory() {
 
   $('history-list').innerHTML = list.slice().reverse().map((r, i, arr) => {
     const prev = arr[i + 1];
-    const d = prev ? r.overall - prev.overall : null;
+    const d = prev ? scoreChange(prev, r) : null;
     return `<button class="history-item" data-go="detail/${r.id}">
       <img src="${blobUrl(r.photos?.smile)}" alt="" />
       <div class="meta"><div class="date">${fmtDate(r.date)}</div>
@@ -750,7 +789,7 @@ async function renderDetail(id) {
   $('detail-score').textContent = rec.overall;
   $('detail-compare').innerHTML = compareChips(rec, list);
   $('detail-photos').innerHTML = POSES.map((p) =>
-    `<figure><img src="${blobUrl(rec.photos?.[p.key])}" alt="${p.title}" /><figcaption>${p.title} · ${rec.poses[p.key].score}</figcaption></figure>`).join('');
+    `<figure><img src="${blobUrl(rec.photos?.[p.key])}" alt="${p.title}" /><figcaption>${p.title} · ${rec.poses[p.key].score ?? 'not measured'}</figcaption></figure>`).join('');
   $('detail-poses').innerHTML = poseRows(rec);
   $('detail-sleep-card').hidden = rec.sleepMinutes == null;
   $('detail-sleep').textContent = rec.sleepMinutes != null ? `😴 ${fmtSleep(rec.sleepMinutes)}` : '';
@@ -759,7 +798,13 @@ async function renderDetail(id) {
 }
 
 $('detail-delete').addEventListener('click', async () => {
-  if (detailId == null || !confirm('Delete this check-in and its photos? This can’t be undone.')) return;
+  if (detailId == null) return;
+  const list = await db.listCheckIns();
+  const isBaseline = list[0]?.id === detailId && list.length > 1;
+  const msg = isBaseline
+    ? 'This is your baseline (first) check-in. If you delete it, your next check-in becomes the new starting point and all “since you started” comparisons will change. Delete it and its photos? This can’t be undone.'
+    : 'Delete this check-in and its photos? This can’t be undone.';
+  if (!confirm(msg)) return;
   await db.deleteCheckIn(detailId);
   toast('Check-in deleted');
   go('history');
@@ -919,13 +964,15 @@ $('settings-condition').addEventListener('click', async (e) => {
 async function renderSettings() {
   selectCondition($('settings-condition'), await getCondition());
   $('sounds-toggle').checked = (await db.getSetting('sounds')) !== false;
+  $('onset').max = todayKey();
   $('onset').value = (await db.getSetting('onset')) || '';
   $('remind-time').value = (await db.getSetting('remindTime')) || '09:00';
 }
 
 $('onset').addEventListener('change', async (e) => {
-  // The start date is required, so clearing it just restores the saved one.
-  if (!e.target.value) {
+  // The start date is required and can't be in the future; otherwise restore the saved one.
+  if (!e.target.value || e.target.value > todayKey()) {
+    if (e.target.value) toast('The start date can’t be in the future');
     e.target.value = (await db.getSetting('onset')) || '';
     return;
   }
@@ -974,7 +1021,7 @@ $('export-btn').addEventListener('click', async () => {
     out.push({ ...r, date: new Date(r.date).toISOString(), photos });
   }
   const payload = { app: 'neurosmile', exported: new Date().toISOString(), onset: await db.getSetting('onset'), checkIns: out };
-  download(`neurosmile-backup-${new Date().toISOString().slice(0, 10)}.json`, new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+  download(`neurosmile-backup-${todayKey()}.json`, new Blob([JSON.stringify(payload)], { type: 'application/json' }));
 });
 
 $('wipe-btn').addEventListener('click', async () => {

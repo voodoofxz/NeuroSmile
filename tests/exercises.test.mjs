@@ -2,9 +2,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { improvementGain, recommendedFor, UNLOCK_GAIN, EXERCISES } from '../js/exercises.js';
 
+// Every movement scores `overall` unless overridden, like a real, fully measured record.
 const rec = (overall, poses = {}) => ({
   overall,
-  poses: { rest: { score: 80 }, smile: { score: 60 }, brows: { score: 70 }, eyes: { score: 75 }, ...poses },
+  poses: { rest: { score: overall }, smile: { score: overall }, brows: { score: overall }, eyes: { score: overall }, ...poses },
 });
 
 test('no gain until there is a check-in after the baseline', () => {

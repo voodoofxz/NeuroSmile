@@ -1,6 +1,6 @@
 // Caches the app shell and the face-analysis model so check-ins work offline.
 // Check-in photos are never cached or sent anywhere - they live in IndexedDB only.
-const CACHE = 'neurosmile-v21';
+const CACHE = 'neurosmile-v23';
 const SHELL = [
   './', 'index.html', 'css/styles.css', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-32.png', 'icons/favicon-32-dark.png', 'icons/logo-dark-192.png',
   'js/app.js', 'js/analysis.js', 'js/storage.js', 'js/messages.js', 'js/chart.js', 'js/exercises.js', 'js/celebrate.js', 'js/insights.js',
@@ -23,8 +23,10 @@ self.addEventListener('fetch', (e) => {
   if (sameOrigin) {
     // Network first for our own files so updates arrive; fall back to cache offline.
     e.respondWith(fetch(e.request).then((res) => {
-      const copy = res.clone();
-      caches.open(CACHE).then((c) => c.put(e.request, copy));
+      if (res.ok && res.status === 200) { // never let an error page replace a good offline copy
+        const copy = res.clone();
+        caches.open(CACHE).then((c) => c.put(e.request, copy));
+      }
       return res;
     }).catch(() => caches.match(e.request, { ignoreSearch: true })));
   } else if (/cdn\.jsdelivr\.net|storage\.googleapis\.com/.test(url.host)) {
