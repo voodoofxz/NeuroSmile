@@ -1,7 +1,8 @@
-// Gentle facial exercises and stretches, offered once improvement shows up.
+// Gentle facial exercises and stretches. Always available, but recommended
+// to start once check-ins show improvement.
 // General guidance only: slow, small, symmetric movements; never forceful.
 
-// Points above the baseline score before exercises are suggested. Day-to-day
+// Points above the baseline score before we say it is a good time to start. Day-to-day
 // noise is a few points, so this is a real, if early, improvement.
 export const UNLOCK_GAIN = 5;
 
@@ -134,7 +135,7 @@ export const SAFETY = [
   'If you notice linked movements — like your eye closing when you smile — stop those exercises and ask a facial therapist for guidance.',
 ];
 
-// Unlock once any later check-in beats the baseline by UNLOCK_GAIN points.
+// Best improvement so far: highest later score minus the baseline.
 export function improvementGain(list) {
   if (list.length < 2) return 0;
   const base = list[0].overall;

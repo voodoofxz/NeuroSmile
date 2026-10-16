@@ -13,8 +13,9 @@ and shows how much things have improved — with encouragement along the way.
   later check-in has an accurate starting point to compare against.
 - **Relax first** — an optional (recommended) 3-breath exercise before the photos so
   the resting face is relaxed; check-ins that used it are marked in history.
-- **Gentle face exercises** — unlock once a check-in scores 5+ points above the
-  baseline; recommends stretches for the two weakest movements, with safety guidance.
+- **Gentle face exercises** — always available, with advice to start once check-ins show
+  improvement (5+ points above the baseline, which is celebrated); recommends stretches
+  for the two weakest movements, with safety guidance.
 - **Celebrations** — confetti and a soft chime whenever a check-in improves (bigger
   for big jumps), a welcome chime for the baseline, and a patience message with every
   result. Sounds can be turned off in Settings; confetti respects reduced motion.

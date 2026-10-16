@@ -354,8 +354,13 @@ figcaption { font-size: 0.85rem; color: var(--muted); text-align: center; margin
 .unlock-card strong { color: var(--good); }
 .unlock-bar { height: 10px; margin: 12px 0 0; }
 #view-exercises .lead { margin: 0; color: var(--ink-2); }
-#ex-unlocked { display: flex; flex-direction: column; gap: 12px; }
-#ex-unlocked[hidden] { display: none; }
+#ex-content { display: flex; flex-direction: column; gap: 12px; }
+.card.timing { border-color: transparent; }
+.card.timing.early { background: var(--accent-soft); color: var(--ink); }
+.card.timing.ready { background: var(--good-soft); }
+.card.timing p { margin: 0; }
+.card.timing .timing-title { font-weight: 700; margin-bottom: 4px; }
+.card.timing.ready .timing-title { color: var(--good); }
 .card.safety { background: var(--lavender); border-color: transparent; color: var(--lavender-ink); }
 .card.safety ul { margin: 0; padding-left: 18px; }
 .card.safety li { margin: 4px 0; }

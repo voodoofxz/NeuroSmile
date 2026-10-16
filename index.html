@@ -178,8 +178,8 @@
         <ul class="wins" id="res-wins"></ul>
       </div>
       <button class="card unlock-card" id="res-unlock" data-go="exercises" hidden>
-        <span class="unlock-icon" aria-hidden="true">🎉</span>
-        <span><strong>You’ve unlocked gentle face exercises!</strong><br>Your face is showing real improvement, so it’s a good time to start some gentle movement. Tap to see what’s recommended for you.</span>
+        <span class="unlock-icon" aria-hidden="true">🌱</span>
+        <span><strong>Your face is improving — a great time to start gentle exercises!</strong><br>Now that movement is returning, gentle exercises can help it along. Tap to see what’s recommended for you.</span>
       </button>
       <div class="card sleep-card" id="res-sleep" hidden></div>
       <div class="card">
@@ -251,15 +251,13 @@
         <button class="link" data-go="home">‹ Home</button>
         <h1>Gentle face exercises</h1>
       </header>
-      <div id="ex-locked" hidden>
-        <div class="card prose">
-          <p><strong>These unlock once your face starts to improve.</strong></p>
-          <p>Gentle exercises help most once movement begins to return. Until then, rest, eye care and your daily check-ins are the best things you can do.</p>
-          <div class="bar unlock-bar"><span id="ex-lock-bar"></span></div>
+      <div id="ex-content">
+        <div class="card timing" id="ex-timing">
+          <p class="timing-title" id="ex-timing-title"></p>
+          <p id="ex-timing-body"></p>
+          <div class="bar unlock-bar" id="ex-progress"><span id="ex-lock-bar"></span></div>
           <p class="muted small-print" id="ex-lock-text"></p>
         </div>
-      </div>
-      <div id="ex-unlocked" hidden>
         <p class="lead" id="ex-lead"></p>
         <div class="card safety">
           <p class="label">Before you start</p>

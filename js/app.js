@@ -130,7 +130,7 @@ async function renderHome() {
     counter.textContent = `${greeting} 🌿 Every check-in is a step forward`;
   }
 
-  renderExerciseCard(list, await exercisesUnlocked(list));
+  renderExerciseCard(list, await improvementReached(list));
 
   const last = list.at(-1);
   $('start-btn').textContent = last ? 'Start today’s check-in' : 'Take your baseline photos';
@@ -440,8 +440,8 @@ async function finishCheckIn() {
   const score = scoreCheckIn(session.caps);
   const record = { date: Date.now(), ...score, sleepMinutes: session.sleepMinutes, relaxed: session.relaxed, photos: session.photos, note: '' };
   record.id = await db.addCheckIn(record);
-  const wasUnlocked = await exercisesUnlocked(previous);
-  const newlyUnlocked = !wasUnlocked && (await exercisesUnlocked([...previous, record]));
+  const wasUnlocked = await improvementReached(previous);
+  const newlyUnlocked = !wasUnlocked && (await improvementReached([...previous, record]));
   lastResult = { record, previous, newlyUnlocked };
   go('result');
 }
@@ -678,8 +678,9 @@ darkQuery.addEventListener('change', () => applyTheme(getTheme()));
 
 // ---------------------------------------------------------------- exercises
 
-// Exercises unlock once a check-in beats the baseline by UNLOCK_GAIN, and stay unlocked.
-async function exercisesUnlocked(list) {
+// Exercises are always available, but are best started once improvement shows:
+// a check-in UNLOCK_GAIN points above the baseline. Once reached, it stays reached.
+async function improvementReached(list) {
   if (await db.getSetting('exercisesUnlocked')) return true;
   if (improvementGain(list) < UNLOCK_GAIN) return false;
   await db.setSetting('exercisesUnlocked', true);
@@ -687,24 +688,18 @@ async function exercisesUnlocked(list) {
 }
 
 const POSE_NAMES = { rest: 'resting face', smile: 'smile', brows: 'eyebrows', eyes: 'eye closing' };
+const focusText = (list) => recommendedFor(list.at(-1)).weakest.map((w) => POSE_NAMES[w]).join(' and ');
 
-function renderExerciseCard(list, unlocked) {
+function renderExerciseCard(list, ready) {
   const card = $('exercise-card');
   card.hidden = list.length === 0;
   if (!list.length) return;
-  card.classList.toggle('locked', !unlocked);
-  if (unlocked) {
-    const { weakest } = recommendedFor(list.at(-1));
-    card.innerHTML = `<span class="ex-icon" aria-hidden="true">💪</span><span class="ex-body">
-      <span class="ex-title">Gentle face exercises</span>
-      <span class="ex-sub">Recommended for your ${weakest.map((w) => POSE_NAMES[w]).join(' and ')}</span></span>
-      <span class="chev" aria-hidden="true">›</span>`;
-  } else {
-    const togo = Math.max(1, UNLOCK_GAIN - Math.max(0, improvementGain(list)));
-    card.innerHTML = `<span class="ex-icon" aria-hidden="true">🔒</span><span class="ex-body">
-      <span class="ex-title">Gentle face exercises</span>
-      <span class="ex-sub">Unlock when your score improves ${togo} more point${togo === 1 ? '' : 's'} above your baseline. Every check-in helps us spot it.</span></span>`;
-  }
+  const sub = ready
+    ? `You’re improving — a great time to start. Focus on your ${focusText(list)}.`
+    : 'Best started once you see improvement. Tap to read about them now.';
+  card.innerHTML = `<span class="ex-icon" aria-hidden="true">${ready ? '💪' : '🌱'}</span><span class="ex-body">
+    <span class="ex-title">Gentle face exercises</span><span class="ex-sub">${sub}</span></span>
+    <span class="chev" aria-hidden="true">›</span>`;
 }
 
 function exerciseHtml(e, open = false) {
@@ -718,17 +713,23 @@ function exerciseHtml(e, open = false) {
 
 async function renderExercises() {
   const list = await db.listCheckIns();
-  const unlocked = await exercisesUnlocked(list);
-  $('ex-locked').hidden = unlocked;
-  $('ex-unlocked').hidden = !unlocked;
-  if (!unlocked) {
+  const ready = await improvementReached(list);
+  const timing = $('ex-timing');
+  timing.className = `card timing ${ready ? 'ready' : 'early'}`;
+  $('ex-progress').hidden = ready;
+  $('ex-lock-text').hidden = ready;
+  if (ready) {
+    $('ex-timing-title').textContent = '🌱 You’re seeing improvement — a great time to start';
+    $('ex-timing-body').textContent = 'Movement is returning, so gentle exercises can now help it along. Go slowly and keep it gentle.';
+  } else {
     const gain = Math.max(0, improvementGain(list));
+    $('ex-timing-title').textContent = '⏳ Best started once you see improvement';
+    $('ex-timing-body').textContent = 'In the early days, rest, eye care and patience matter most, and forcing movement before the nerve recovers can do more harm than good. You’re welcome to read through these now and try the warm-up massage. NeuroSmile will let you know when your check-ins show it’s a good time to start the rest.';
     $('ex-lock-bar').style.width = `${Math.min(100, (gain / UNLOCK_GAIN) * 100)}%`;
-    $('ex-lock-text').textContent = `${gain} of ${UNLOCK_GAIN} points of improvement so far. Keep checking in — you’ll get there.`;
-    return;
+    $('ex-lock-text').textContent = `${gain} of ${UNLOCK_GAIN} points of improvement so far. Healing takes time — you’ll get there.`;
   }
-  const { weakest, exercises } = recommendedFor(list.at(-1));
-  $('ex-lead').textContent = `Your face is improving 🌱 These gentle movements can support your recovery. Based on your latest check-in, we suggest focusing on your ${weakest.map((w) => POSE_NAMES[w]).join(' and ')}.`;
+  const { exercises } = recommendedFor(list.at(-1));
+  $('ex-lead').textContent = `Based on your latest check-in, these focus on your ${focusText(list)}.`;
   $('ex-safety').innerHTML = SAFETY.map((t) => `<li>${t}</li>`).join('');
   $('ex-recommended').innerHTML = exercises.map((e, i) => exerciseHtml(e, i === 0)).join('');
   const picked = new Set(exercises.map((e) => e.id));
