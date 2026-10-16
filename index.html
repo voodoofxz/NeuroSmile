@@ -38,6 +38,7 @@
           <p>Each day you’ll take a quick 1-minute check-in. The app compares how the two sides of your face move and shows you every bit of progress — even the small steps.</p>
           <p><strong>For most people, facial palsy gets better with time.</strong> Bell’s palsy often improves within weeks to months, and Ramsay Hunt syndrome usually takes longer. Every journey is different, and tracking helps you see the healing as it happens.</p>
           <p>🔒 Your photos never leave this phone. No account, no uploads.</p>
+          <p class="accuracy-note">ℹ️ NeuroSmile is a tool to help you see <strong>potential</strong> progress. Its scores are estimates, not 100% accurate, and not a medical measurement.</p>
         </div>
         <div class="card why">
           <p class="label">Why a quick setup first?</p>
@@ -143,7 +144,7 @@
         <button class="btn" data-go="about">🔒 Privacy</button>
       </div>
 
-      <p class="disclaimer">This app is a personal tracking aid, not a medical device or diagnosis. Follow your doctor’s advice. Seek urgent care for sudden weakness in an arm or leg, trouble speaking, or a severe headache.</p>
+      <p class="disclaimer">NeuroSmile is a tool to help you see potential progress. Scores are estimates and not 100% accurate. It is not a medical device or diagnosis. Follow your doctor’s advice. Seek urgent care for sudden weakness in an arm or leg, trouble speaking, or a severe headache.</p>
     </section>
 
     <!-- CHECK-IN -->
@@ -208,6 +209,7 @@
           <span class="score-of">/ 100</span>
         </div>
         <div class="compare" id="res-compare"></div>
+        <p class="accuracy-note">ℹ️ This score is an estimate to help you spot trends, not an exact or medical measurement. Lighting, camera angle and how you make each expression can shift it by a few points.</p>
       </div>
       <div class="card">
         <p class="label">By movement</p>
@@ -236,7 +238,7 @@
       <div class="card" id="chart-card">
         <p class="label">Overall symmetry over time</p>
         <div id="chart"></div>
-        <p class="muted small-print">Tap a point to see that day. Higher is more symmetric.</p>
+        <p class="muted small-print">Tap a point to see that day. Higher is more symmetric. Scores are estimates, so look at the overall trend rather than any single day.</p>
       </div>
       <div class="card" id="compare-card" hidden>
         <p class="label">First check-in vs. latest (smile)</p>
@@ -367,9 +369,13 @@
         <h3>Your photos never leave your phone</h3>
         <p>Face analysis runs entirely on this device. Photos and scores are saved in this app’s private storage on your phone only. Nothing is uploaded, and there is no account.</p>
         <p>The only download is the face-analysis model itself, fetched once and then cached so the app works offline.</p>
+        <h3>How accurate is it?</h3>
+        <p>NeuroSmile is a tool to help you see <strong>potential</strong> progress over time. It is not 100% accurate and is not a medical measurement or diagnosis.</p>
+        <p>Phone cameras and face tracking are good at spotting changes, but scores can shift by a few points because of lighting, camera angle, distance, tiredness or how big each expression is. A single high or low score doesn’t mean much on its own. The trend over days and weeks is far more meaningful.</p>
+        <p>Only your doctor or a facial therapist can properly assess your recovery. Use NeuroSmile alongside their care, not instead of it.</p>
         <h3>How the score works</h3>
         <p>Each check-in asks for four expressions. For each one, the app finds 478 points on your face and compares how far your left and right side move. If your weaker side moves 70% as much as your stronger side, that movement scores about 70.</p>
-        <p>The overall score blends: relaxed face 20%, smile 35%, eyebrow raise 20%, eye closing 25%. 100 means both sides look and move the same.</p>
+        <p>The overall score blends: relaxed face 20%, smile 35%, eyebrow raise 20%, eye closing 25%. 100 means both sides look and move the same. If an expression doesn’t show enough movement to measure, it’s left out rather than guessed.</p>
         <h3>Tips for steady numbers</h3>
         <ul>
           <li>Check in at the same time and place each day.</li>
@@ -383,7 +389,7 @@
         <h3>Look after your eye</h3>
         <p id="eye-tip"></p>
         <h3>Not medical advice</h3>
-        <p>This is a personal tracking aid, not a diagnostic tool. Share your progress with your doctor, and contact them if things get worse or you notice new symptoms.</p>
+        <p>This is a personal tracking aid that estimates potential progress, not a diagnostic tool. Share your progress with your doctor, and contact them if things get worse or you notice new symptoms.</p>
       </div>
     </section>
   </main>

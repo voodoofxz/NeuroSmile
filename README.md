@@ -101,6 +101,8 @@ lighting and angle; the trend over days and weeks is what matters.
 
 ## Disclaimer
 
-This is a personal tracking aid, not a medical device, and does not diagnose or
-treat any condition. Follow your clinician's advice and seek urgent care for new
+NeuroSmile is a tool to help people see **potential** progress. Its scores are
+estimates, not 100% accurate, and can shift with lighting, camera angle and
+expression. It is a personal tracking aid, not a medical device, and does not
+diagnose or treat any condition. Follow your clinician's advice and seek urgent care for new
 symptoms such as limb weakness, trouble speaking or a severe headache.
