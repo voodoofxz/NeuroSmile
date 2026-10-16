@@ -1,4 +1,4 @@
-# Smile Again
+# NeuroSmile
 
 *A gentle companion for Bell's palsy recovery.*
 

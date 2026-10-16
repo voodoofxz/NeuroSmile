@@ -1,6 +1,6 @@
 {
-  "name": "Smile Again",
-  "short_name": "Smile Again",
+  "name": "NeuroSmile",
+  "short_name": "NeuroSmile",
   "description": "A gentle companion for Bell's palsy recovery: private, on-device smile and facial symmetry check-ins.",
   "start_url": "./",
   "scope": "./",
