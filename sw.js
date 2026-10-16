@@ -1,6 +1,6 @@
 // Caches the app shell and the face-analysis model so check-ins work offline.
 // Check-in photos are never cached or sent anywhere - they live in IndexedDB only.
-const CACHE = 'neurosmile-v12';
+const CACHE = 'neurosmile-v13';
 const SHELL = [
   './', 'index.html', 'css/styles.css', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-32.png',
   'js/app.js', 'js/analysis.js', 'js/storage.js', 'js/messages.js', 'js/chart.js',
