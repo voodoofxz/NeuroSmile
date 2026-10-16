@@ -1,80 +1,80 @@
 :root {
-  --bg: #f2f8fb;
-  --bg-grad: linear-gradient(180deg, #e2f3f8 0%, #edf6fa 45%, #f4f7fb 100%);
+  --bg: #f6f8fa;
+  --bg-grad: linear-gradient(180deg, #e6f7f5 0%, #eff6fa 45%, #f6f8fa 100%);
   --surface: #ffffff;
-  --ink: #0d2340;
-  --ink-2: #3a526e;
-  --muted: #5b708a;
-  --line: #d9e7ee;
-  --accent: #0b6d8b;
-  --accent-2: #1f5fae;
+  --ink: #0b2440;
+  --ink-2: #3a5370;
+  --muted: #5a6f87;
+  --line: #dde7ee;
+  --accent: #06737e;
+  --accent-2: #0164d2;
   --accent-ink: #ffffff;
-  --accent-soft: #ddf2f7;
-  --lavender: #e5ecfa;
-  --lavender-ink: #33508c;
-  --calm: #e0f3f0;
-  --calm-ink: #1d5a55;
-  --good: #1c7558;
-  --good-soft: #def2e9;
+  --accent-soft: #ddf4f3;
+  --lavender: #e6eefb;
+  --lavender-ink: #2f4f8f;
+  --calm: #e1f6f2;
+  --calm-ink: #11615a;
+  --good: #167553;
+  --good-soft: #ddf3ea;
   --warn: #8f5d1e;
   --danger: #ad423e;
   --bar-track: #e2ecf1;
-  --glow: rgb(62 224 232 / 0.35);
+  --glow: rgb(14 193 187 / 0.3);
   --radius: 20px;
-  --shadow: 0 1px 2px rgb(13 35 64 / 0.05), 0 6px 20px rgb(13 35 64 / 0.06);
+  --shadow: 0 1px 2px rgb(11 36 64 / 0.05), 0 6px 20px rgb(11 36 64 / 0.06);
   color-scheme: light dark;
 }
 
 /* Theme: "auto" follows the phone; Settings can force light or dark via data-theme. */
 :root[data-theme="light"] { color-scheme: light; }
 :root[data-theme="dark"] {
-  --bg: #061529;
-  --bg-grad: linear-gradient(180deg, #0a2242 0%, #071a34 50%, #05132a 100%);
-  --surface: #0c2340;
-  --ink: #e3f1f8;
-  --ink-2: #a8c2d5;
-  --muted: #8ba6bd;
-  --line: #1a3658;
-  --accent: #4fd5e2;
-  --accent-2: #5aa9f4;
-  --accent-ink: #04203a;
-  --accent-soft: #0f3452;
-  --lavender: #132b52;
-  --lavender-ink: #bccdf6;
-  --calm: #0d2f3a;
-  --calm-ink: #a4e2db;
-  --good: #7adbad;
-  --good-soft: #0d3029;
+  --bg: #021837;
+  --bg-grad: linear-gradient(180deg, #042447 0%, #021c3e 50%, #021530 100%);
+  --surface: #0a2648;
+  --ink: #e6f3fa;
+  --ink-2: #a9c4d8;
+  --muted: #8ba7bf;
+  --line: #19385e;
+  --accent: #55edd3;
+  --accent-2: #1fa6fa;
+  --accent-ink: #021837;
+  --accent-soft: #0c3550;
+  --lavender: #132a50;
+  --lavender-ink: #bdd0f7;
+  --calm: #0b3138;
+  --calm-ink: #a6ecdf;
+  --good: #7ae0b2;
+  --good-soft: #0b3129;
   --warn: #e8b679;
   --danger: #f29a9a;
-  --bar-track: #16314f;
-  --glow: rgb(79 213 226 / 0.35);
+  --bar-track: #15335a;
+  --glow: rgb(85 237 211 / 0.35);
   --shadow: none;
   color-scheme: dark;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #061529;
-    --bg-grad: linear-gradient(180deg, #0a2242 0%, #071a34 50%, #05132a 100%);
-    --surface: #0c2340;
-    --ink: #e3f1f8;
-    --ink-2: #a8c2d5;
-    --muted: #8ba6bd;
-    --line: #1a3658;
-    --accent: #4fd5e2;
-    --accent-2: #5aa9f4;
-    --accent-ink: #04203a;
-    --accent-soft: #0f3452;
-    --lavender: #132b52;
-    --lavender-ink: #bccdf6;
-    --calm: #0d2f3a;
-    --calm-ink: #a4e2db;
-    --good: #7adbad;
-    --good-soft: #0d3029;
+    --bg: #021837;
+    --bg-grad: linear-gradient(180deg, #042447 0%, #021c3e 50%, #021530 100%);
+    --surface: #0a2648;
+    --ink: #e6f3fa;
+    --ink-2: #a9c4d8;
+    --muted: #8ba7bf;
+    --line: #19385e;
+    --accent: #55edd3;
+    --accent-2: #1fa6fa;
+    --accent-ink: #021837;
+    --accent-soft: #0c3550;
+    --lavender: #132a50;
+    --lavender-ink: #bdd0f7;
+    --calm: #0b3138;
+    --calm-ink: #a6ecdf;
+    --good: #7ae0b2;
+    --good-soft: #0b3129;
     --warn: #e8b679;
     --danger: #f29a9a;
-    --bar-track: #16314f;
-    --glow: rgb(79 213 226 / 0.35);
+    --bar-track: #15335a;
+    --glow: rgb(85 237 211 / 0.35);
     --shadow: none;
     color-scheme: dark;
   }
@@ -210,7 +210,7 @@ textarea { resize: vertical; }
   pointer-events: none;
   transition: border-color 0.2s;
 }
-.camera-wrap.ok .guide-oval { border-color: rgb(79 213 226 / 0.95); border-style: solid; box-shadow: 0 0 24px rgb(79 213 226 / 0.45); }
+.camera-wrap.ok .guide-oval { border-color: rgb(85 237 211 / 0.95); border-style: solid; box-shadow: 0 0 24px rgb(85 237 211 / 0.45); }
 .countdown {
   position: absolute; inset: 0; display: grid; place-items: center;
   font-size: 5rem; font-weight: 700; color: #fff; text-shadow: 0 2px 12px rgb(0 0 0 / 0.5);
@@ -398,3 +398,12 @@ figcaption { font-size: 0.85rem; color: var(--muted); text-align: center; margin
 }
 .switch:checked { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border-color: transparent; }
 .switch:checked::after { transform: translateX(20px); }
+
+/* Theme-matched logo: light artwork by default, dark artwork in dark mode. */
+.logo-dark { display: none !important; }
+:root[data-theme="dark"] .logo-light { display: none !important; }
+:root[data-theme="dark"] .logo-dark { display: inline-block !important; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .logo-light { display: none !important; }
+  :root:not([data-theme="light"]) .logo-dark { display: inline-block !important; }
+}
