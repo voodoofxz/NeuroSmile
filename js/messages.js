@@ -12,7 +12,7 @@ export const CALM_REMINDERS = [
   'Recovery isn’t a straight line. Good days and flat days are both part of it.',
   'Be as kind to yourself today as you would be to a friend going through this.',
   'Rest, sleep and patience are part of the treatment. You’re doing the work just by showing up.',
-  'Many people notice the first signs of movement within a few weeks. Each check-in helps you catch them.',
+  'Many people notice the first signs of movement within weeks to months. Each check-in helps you catch them.',
   'This is a chapter, not the whole story.',
 ];
 

@@ -1,7 +1,7 @@
 // Small celebrations for progress: a confetti burst and a soft chime.
 // Both are gentle by design and respect reduced-motion and the sound setting.
 
-const COLORS = ['#0ec1bb', '#55edd3', '#29d2ea', '#1fa6fa', '#0179fb', '#ffd98a', '#c9c0ea', '#ffffff'];
+const COLORS = ['#8fd6ca', '#a8d4ec', '#7fb3d6', '#c9c2ea', '#f4d3b5', '#bfe3cb', '#ffffff', '#6fbfb3'];
 
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 

@@ -488,7 +488,7 @@ function loop(landmarker) {
     session.latest = { features, blend };
     if (session.collecting) session.collecting.push({ features, blend });
 
-    ctx.fillStyle = 'rgba(85, 237, 211, 0.9)';
+    ctx.fillStyle = 'rgba(143, 214, 202, 0.9)';
     for (const i of [33, 133, 159, 145, 362, 263, 386, 374, 61, 291, 105, 334, 1]) {
       ctx.beginPath();
       ctx.arc(lm[i].x * w, lm[i].y * h, Math.max(2, w / 220), 0, Math.PI * 2);
@@ -828,7 +828,7 @@ function applyTheme(choice) {
   else delete root.dataset.theme;
   // Keep the phone's status bar color in step with the page.
   const dark = choice === 'dark' || (choice === 'auto' && darkQuery.matches);
-  document.querySelector('meta[name="theme-color"]').content = dark ? '#042447' : '#e6f7f5';
+  document.querySelector('meta[name="theme-color"]').content = dark ? '#0f2540' : '#e8f2f1';
   document.querySelectorAll('[data-theme-choice]').forEach((b) =>
     b.setAttribute('aria-checked', String(b.dataset.themeChoice === choice)));
 }

@@ -24,8 +24,8 @@ export function renderChart(el, points, onSelect) {
     <text x="${PAD.left}" y="${H - 6}" font-size="10" fill="var(--muted)">${fmt(t0)}</text>
     <text x="${W - PAD.right}" y="${H - 6}" text-anchor="end" font-size="10" fill="var(--muted)">${fmt(t1)}</text>
     <line class="xhair" y1="${PAD.top}" y2="${H - PAD.bottom}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3" visibility="hidden" />
-    <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
-    ${points.map((p) => `<circle cx="${x(p.date)}" cy="${y(p.value)}" r="4" fill="var(--accent)" stroke="var(--surface)" stroke-width="2" />`).join('')}
+    <path d="${path}" fill="none" stroke="var(--data)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+    ${points.map((p) => `<circle cx="${x(p.date)}" cy="${y(p.value)}" r="4" fill="var(--data)" stroke="var(--surface)" stroke-width="2" />`).join('')}
     <rect class="hit" x="${PAD.left}" y="0" width="${W - PAD.left - PAD.right}" height="${H}" fill="transparent" />
   </svg>
   <div class="chart-tip" hidden></div>`;
@@ -90,8 +90,8 @@ export function renderWeekChart(el, days) {
     <line x1="${P.left}" x2="${WW - P.right}" y1="${WH - P.bottom}" y2="${WH - P.bottom}" stroke="var(--line)" stroke-width="1" />
     ${days.map((d, i) => `<text x="${x(i)}" y="${WH - 6}" text-anchor="middle" font-size="11"
       fill="${d.today ? 'var(--accent)' : 'var(--muted)'}" font-weight="${d.today ? 700 : 400}">${d.label}</text>`).join('')}
-    ${drawn.length > 1 ? `<path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />` : ''}
-    ${drawn.map(([px, py, d]) => `<circle cx="${px}" cy="${py}" r="5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"><title>${d.label}: ${d.value}</title></circle>`).join('')}
+    ${drawn.length > 1 ? `<path d="${path}" fill="none" stroke="var(--data)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />` : ''}
+    ${drawn.map(([px, py, d]) => `<circle cx="${px}" cy="${py}" r="5" fill="var(--data)" stroke="var(--surface)" stroke-width="2"><title>${d.label}: ${d.value}</title></circle>`).join('')}
     ${last ? `<text x="${Math.min(last[0], WW - P.right - 8)}" y="${last[1] - 10}" text-anchor="middle" font-size="12" font-weight="700" fill="var(--ink)">${last[2].value}</text>` : ''}
   </svg>`;
 }
